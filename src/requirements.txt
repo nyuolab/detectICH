@@ -1,0 +1,10 @@
+### Required packages ###
+# Use command to install: pip install -r requirements.txt 
+matplotlib
+pandas
+numpy
+torch
+sklearn
+scikit-image
+tqdm
+opencv-python
