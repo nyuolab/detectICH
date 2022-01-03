@@ -57,7 +57,8 @@ class IntracranialDataset(Dataset):
     # Transform images
     image = self.transform(image)
     targets = self.labels[idx]
-    return {'image': torch.tensor(image, dtype=torch.float32),
+    sample_id = self.image_names[idx]
+    return {'sample_id': sample_id,'image': torch.tensor(image, dtype=torch.float32),
               'label': torch.tensor(targets, dtype=torch.float32)
       }
 

@@ -26,7 +26,7 @@ model = models.model_fxn(pretrained=True, requires_grad = False).to(device)
 
 # Learning parameters
 lr = 0.001
-epochs = 10
+epochs = 2
 batch_size = 4
 optimizer = optim.Adam(model.parameters(), lr=lr)
 criterion = nn.BCEWithLogitsLoss()
@@ -83,4 +83,4 @@ plt.plot(valid_loss, color='red', label='validataion loss')
 plt.xlabel('Epochs')
 plt.ylabel('Loss')
 plt.legend()
-plt.savefig(f'../output/loss_{lr}_{epochs}_{batch_size}.png')
+plt.savefig(f'../output/loss_lr{lr}_e{epochs}_b{batch_size}.png')
