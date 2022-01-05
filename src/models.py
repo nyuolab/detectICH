@@ -12,7 +12,7 @@ def model_fxn(pretrained, requires_grad):
   elif requires_grad == True:
     for param in model.parameters():
         param.requires_grad = True
-  # make the classificaiton layer learnable
+  # make the classification layer learnable
   # we have 6 classes in total
   model.fc = nn.Linear(2048, 6)
   return model

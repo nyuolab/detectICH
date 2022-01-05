@@ -56,10 +56,11 @@ class IntracranialDataset(Dataset):
     image = _read(img_path, self.img_size)
     # Transform images
     image = self.transform(image)
-    targets = self.labels[idx]
+    targets = torch.from_numpy(self.labels[idx])
     sample_id = self.image_names[idx]
-    return {'sample_id': sample_id,'image': torch.tensor(image, dtype=torch.float32),
-              'label': torch.tensor(targets, dtype=torch.float32)
+    return {'sample_id': sample_id,
+            'image': image.detach().clone().float(),
+            'label': targets.detach().clone().float()
       }
 
 ## Functions to Normalize DCM images

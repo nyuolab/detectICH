@@ -35,6 +35,9 @@ test_loader = DataLoader(
     shuffle=False
 )
 
+samples = []
+pred_labels = []
+ground_truth = []
 for counter, data in enumerate(test_loader):
     image, target = data['image'].to(device), data['label']
     # get all the index positions where value == 1
@@ -43,19 +46,28 @@ for counter, data in enumerate(test_loader):
     outputs = model_inf(image)
     outputs = torch.sigmoid(outputs)
     outputs = outputs.detach().cpu()
-    sorted_indices = np.argsort(outputs[0])
-    # Keep top 6 (in this case, all)
-    best = sorted_indices[-6:]
-    string_predicted = ''
-    string_actual = ''
-    for i in range(len(best)):
-        string_predicted += f"{label_options[best[i]]},{outputs[0][best[i]]:.5f}    "
-    for i in range(len(target_indices)):
-        string_actual += f"{label_options[target_indices[i]]}    "
-    image = image.squeeze(0)
-    image = image.detach().cpu().numpy()
-    image = np.transpose(image, (1, 2, 0))
-    plt.imshow(image)
-    plt.axis('off')
-    plt.title(f"PREDICTED: {string_predicted}\nACTUAL: {string_actual}")
-    plt.savefig(f"../output/inference_{counter}.jpg")
+    samples.append(data['sample_id'])
+    pred_labels.append(outputs.numpy())
+    ground_truth.append(target.numpy())
+
+predictions_df = pd.melt(pd.concat(
+    [pd.DataFrame(np.concatenate(samples), columns = ['Image']),
+     pd.DataFrame(np.concatenate(pred_labels), columns = label_options)],
+     axis=1, join = 'inner'
+), id_vars = ['Image'], var_name = 'subtype', value_name = 'pred_label')
+
+
+ground_truth_df = pd.melt(pd.concat(
+    [pd.DataFrame(np.concatenate(samples), columns = ['Image']),
+     pd.DataFrame(np.concatenate(ground_truth), columns = label_options)],
+     axis=1, join = 'inner'
+), id_vars = ['Image'], var_name = 'subtype', value_name = 'ground_truth')
+
+# Save a .csv file with the inference results (label predictions) and ground-truth labels
+pd.merge(predictions_df, ground_truth_df).to_csv('../output/inference_results.csv', index = False)
+
+# Format and save .csv with ID and predicted labels for Kaggle submission
+kaggle_submission = pd.merge(predictions_df, ground_truth_df)
+kaggle_submission['ID'] = kaggle_submission['Image'] + '_' + kaggle_submission['subtype']
+kaggle_submission = kaggle_submission[['ID', 'pred_label']].rename(columns = {'pred_label': 'Label'})
+kaggle_submission.to_csv('../output/kaggle_submission.csv')

@@ -27,7 +27,7 @@ model = models.model_fxn(pretrained=True, requires_grad = False).to(device)
 # Learning parameters
 lr = 0.001
 epochs = 2
-batch_size = 4
+batch_size = 8
 optimizer = optim.Adam(model.parameters(), lr=lr)
 criterion = nn.BCEWithLogitsLoss()
 
