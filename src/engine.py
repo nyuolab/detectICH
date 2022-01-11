@@ -3,7 +3,7 @@ import torch
 from tqdm import tqdm
 
 #Training fxn
-def train(model, dataloader, optimizer, criterion, train_data, device):
+def train(model, dataloader, optimizer, criterion, scheduler, train_data, device):
   print('training...')
   model.train()
   counter = 0
