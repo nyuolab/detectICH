@@ -28,7 +28,7 @@ model = models.model_fxn(pretrained=True, requires_grad = False).to(device)
 # Learning parameters
 lr = 0.01
 epochs = 12
-batch_size = 8
+batch_size = 16
 optimizer = optim.Adam(model.parameters(), lr=lr)
 criterion = nn.BCEWithLogitsLoss()
 scheduler = lr_scheduler.StepLR(optimizer, step_size=3, gamma=0.1)
