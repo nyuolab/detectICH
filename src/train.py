@@ -66,7 +66,7 @@ learning_rate = []
 
 for epoch in range(epochs):
   print(f"Epoch {epoch+1} of {epochs}")
-  train_results = train(model, train_loader, optimizer, criterion, train_data, device)
+  train_results = train(model, train_loader, optimizer, criterion, scheduler, train_data, device)
   valid_results = validate(model, valid_loader, criterion, valid_data, device)
   #Save values for output
   train_loss.append(train_results['train_loss'])
