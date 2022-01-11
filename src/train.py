@@ -5,6 +5,7 @@ import torch.optim as optim
 import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib
+import numpy as np
 from engine import train, validate
 from dataset_class import IntracranialDataset
 from torch.utils.data import DataLoader
