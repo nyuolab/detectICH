@@ -11,6 +11,7 @@ from dataset_class import IntracranialDataset
 from torch.utils.data import DataLoader
 from torch.optim import lr_scheduler
 from datetime import date
+from sklearn import metrics
 runtime_day = date.today().strftime("%b-%d-%Y")
 #
 matplotlib.style.use('ggplot')
