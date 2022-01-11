@@ -70,4 +70,4 @@ pd.merge(predictions_df, ground_truth_df).to_csv('../output/inference_results.cs
 kaggle_submission = pd.merge(predictions_df, ground_truth_df)
 kaggle_submission['ID'] = kaggle_submission['Image'] + '_' + kaggle_submission['subtype']
 kaggle_submission = kaggle_submission[['ID', 'pred_label']].rename(columns = {'pred_label': 'Label'})
-kaggle_submission.to_csv('../output/kaggle_submission.csv')
+kaggle_submission.to_csv('../output/kaggle_submission.csv', index = False)
