@@ -57,13 +57,10 @@ class ICHValidator(Executor):
         self.device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
         self.model.to(self.device)
 
-
         # Point to the relevent test label data and DICOM files
-        print(f'\nCurrent working dir: {os.getcwd()}')
-        print(f'list of subdirs: {os.listdir(".")}\n')
         train_csv = pd.read_csv('./input/label_dataset/prototype_train_labels.csv')
         data_path = './input/images'
-        self.test_data = IntracranialDataset(train_csv, train=False, test=False)
+        self.test_data = IntracranialDataset(train_csv, path=data_path, train=False, test=False)
         self.test_loader = DataLoader(self.test_data, batch_size=8, shuffle=False)
 
     def execute(self, task_name: str, shareable: Shareable, fl_ctx: FLContext, abort_signal: Signal) -> Shareable:

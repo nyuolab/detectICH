@@ -13,7 +13,6 @@
 # limitations under the License.
 
 import os.path
-import os
 import torch
 from torch import nn
 from torch.optim import Adam
@@ -26,10 +25,7 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 import pandas as pd
-import matplotlib.pyplot as plt
-import matplotlib
 import numpy as np
-from fl_engine import train, validate # I don't think I need this...
 from fl_dataset_class import IntracranialDataset
 from torch.utils.data import DataLoader
 from torch.optim import lr_scheduler
@@ -91,8 +87,6 @@ class ICHTrainer(Executor):
         #    Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
         #])
         # Point to the relevent test label data and DICOM files
-        print(f'\nCurrent working dir: {os.getcwd()}')
-        print(f'list of subdirs: {os.listdir(".")}\n')
         train_csv = pd.read_csv('./input/label_dataset/prototype_train_labels.csv')
         data_path = './input/images'
 
