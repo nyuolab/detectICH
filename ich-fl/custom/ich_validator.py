@@ -16,9 +16,9 @@ import torch
 from torch.utils.data import DataLoader
 from torchvision.datasets import CIFAR10
 from torchvision.transforms import Compose, ToTensor, Normalize
+import os
 
 # From train.py --probably can trim this down
-import models
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -42,7 +42,6 @@ from nvflare.apis.fl_context import FLContext
 from nvflare.apis.shareable import Shareable, make_reply
 from nvflare.apis.signal import Signal
 from nvflare.app_common.app_constant import AppConstants
-from simple_network import SimpleNetwork
 from resnext_network import model_fxn
 
 
@@ -60,8 +59,10 @@ class ICHValidator(Executor):
 
 
         # Point to the relevent test label data and DICOM files
-        train_csv = pd.read_csv('../../input/label_dataset/prototype_train_labels.csv')
-        data_path = '../../input/images'
+        print(f'\nCurrent working dir: {os.getcwd()}')
+        print(f'list of subdirs: {os.listdir(".")}\n')
+        train_csv = pd.read_csv('./input/label_dataset/prototype_train_labels.csv')
+        data_path = './input/images'
         self.test_data = IntracranialDataset(train_csv, train=False, test=False)
         self.test_loader = DataLoader(self.test_data, batch_size=8, shuffle=False)
 

@@ -16,13 +16,12 @@ import os.path
 import os
 import torch
 from torch import nn
-from torch.optim import SGD
+from torch.optim import Adam
 from torch.utils.data.dataloader import DataLoader
 from torchvision.datasets import CIFAR10
 from torchvision.transforms import ToTensor, Normalize, Compose
 
 # From train.py --probably can trim this down
-import models
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -92,12 +91,13 @@ class ICHTrainer(Executor):
         #    Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
         #])
         # Point to the relevent test label data and DICOM files
-        print(f'Current working dir: {os.getcwd()}')')
-        train_csv = pd.read_csv('../../input/label_dataset/prototype_train_labels.csv')
-        data_path = '../../input/images'
+        print(f'\nCurrent working dir: {os.getcwd()}')
+        print(f'list of subdirs: {os.listdir(".")}\n')
+        train_csv = pd.read_csv('./input/label_dataset/prototype_train_labels.csv')
+        data_path = './input/images'
 
         #self._train_dataset = CIFAR10(root='~/data', transform=transforms, download=True, train=True)
-        self._train_dataset = IntracranialDataset(train_csv, path=data_path,Train=True,test=False)
+        self._train_dataset = IntracranialDataset(train_csv, path=data_path,train=True,test=False)
         self._train_loader = DataLoader(self._train_dataset, batch_size=batch_size, shuffle=True)
         self._n_iterations = len(self._train_loader)
 
