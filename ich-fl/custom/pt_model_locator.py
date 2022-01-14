@@ -23,7 +23,8 @@ from nvflare.app_common.abstract.model import model_learnable_to_dxo
 from nvflare.app_common.abstract.model_locator import ModelLocator
 from nvflare.app_common.pt.pt_fed_utils import PTModelPersistenceFormatManager
 from pt_constants import PTConstants
-from resnext_network import model_fxn
+from simple_network import model_fxn
+
 
 class PTModelLocator(ModelLocator):
 
