@@ -23,7 +23,7 @@ from nvflare.app_common.abstract.model import model_learnable_to_dxo
 from nvflare.app_common.abstract.model_locator import ModelLocator
 from nvflare.app_common.pt.pt_fed_utils import PTModelPersistenceFormatManager
 from pt_constants import PTConstants
-from simple_network import model_fxn
+from resnext_network import MyResNeXtClass#model_fxn,
 
 
 class PTModelLocator(ModelLocator):
@@ -31,7 +31,8 @@ class PTModelLocator(ModelLocator):
     def __init__(self, exclude_vars=None, model=None):
         super(PTModelLocator, self).__init__()
 
-        self.model = model_fxn(pretrained=True, requires_grad=False)
+        #self.model = model_fxn(pretrained=True, requires_grad=False)
+        self.model = MyResNeXtClass(pretrained=True, requires_grad=False)
         self.exclude_vars = exclude_vars
 
     def get_model_names(self, fl_ctx: FLContext) -> List[str]:

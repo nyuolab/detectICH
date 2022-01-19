@@ -42,7 +42,7 @@ from nvflare.apis.fl_context import FLContext
 from nvflare.apis.shareable import Shareable, make_reply
 from nvflare.apis.signal import Signal
 from nvflare.app_common.app_constant import AppConstants
-from resnext_network import model_fxn
+from resnext_network import MyResNeXtClass #,model_fxn, 
 
 
 class ICHValidator(Executor):
@@ -53,7 +53,8 @@ class ICHValidator(Executor):
         self._validate_task_name = validate_task_name
 
         # Setup the model
-        self.model = model_fxn(pretrained=True, requires_grad=False)
+        #self.model = model_fxn(pretrained=True, requires_grad=False)
+        self.model = MyResNeXtClass(pretrained=True, requires_grad=False)
         self.device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
         self.model.to(self.device)
 

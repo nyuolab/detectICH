@@ -12,7 +12,7 @@
       "name": "PTFileModelPersistor",
       "args": {
         "model": {
-          "path": "resnext_network.model_fxn"
+          "path": "resnext_network.MyResNeXtClass"
         }
       }
     },
