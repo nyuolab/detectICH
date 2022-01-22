@@ -45,7 +45,7 @@ from nvflare.app_common.app_constant import AppConstants
 from nvflare.app_common.pt.pt_fed_utils import PTModelPersistenceFormatManager
 from pt_constants import PTConstants
 from resnext_network import MyResNeXtClass#,model_fxn
-
+from resnext_class import ResNet, Bottleneck
 
 class ICHTrainer(Executor):
 
@@ -74,7 +74,13 @@ class ICHTrainer(Executor):
         # Training setup
         self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
         #self.model = model_fxn(pretrained=True, requires_grad = False)
-        self.model = MyResNeXtClass(pretrained = True, requires_grad = False)
+        self.model = ResNet(
+            Bottleneck,
+            layers=[3, 4, 23, 3],
+            groups = 32,
+            width_per_group = 8,
+            pretrained = True,
+        )
         self.model.to(self.device)
         self.loss = nn.BCEWithLogitsLoss()
         self.optimizer = Adam(self.model.parameters(), lr=lr)

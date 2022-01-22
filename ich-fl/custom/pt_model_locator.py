@@ -24,7 +24,7 @@ from nvflare.app_common.abstract.model_locator import ModelLocator
 from nvflare.app_common.pt.pt_fed_utils import PTModelPersistenceFormatManager
 from pt_constants import PTConstants
 from resnext_network import MyResNeXtClass#model_fxn,
-
+from resnext_class import ResNet, Bottleneck
 
 class PTModelLocator(ModelLocator):
 
@@ -32,7 +32,13 @@ class PTModelLocator(ModelLocator):
         super(PTModelLocator, self).__init__()
 
         #self.model = model_fxn(pretrained=True, requires_grad=False)
-        self.model = MyResNeXtClass(pretrained=True, requires_grad=False)
+        self.model = ResNet(
+            Bottleneck,
+            layers=[3, 4, 23, 3],
+            groups = 32,
+            width_per_group = 8,
+            pretrained = True,
+        )
         self.exclude_vars = exclude_vars
 
     def get_model_names(self, fl_ctx: FLContext) -> List[str]:

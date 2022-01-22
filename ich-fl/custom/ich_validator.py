@@ -43,7 +43,7 @@ from nvflare.apis.shareable import Shareable, make_reply
 from nvflare.apis.signal import Signal
 from nvflare.app_common.app_constant import AppConstants
 from resnext_network import MyResNeXtClass #,model_fxn, 
-
+from resnext_class import ResNet, Bottleneck
 
 class ICHValidator(Executor):
     
@@ -54,7 +54,13 @@ class ICHValidator(Executor):
 
         # Setup the model
         #self.model = model_fxn(pretrained=True, requires_grad=False)
-        self.model = MyResNeXtClass(pretrained=True, requires_grad=False)
+        self.model = ResNet(
+            Bottleneck,
+            layers=[3, 4, 23, 3],
+            groups = 32,
+            width_per_group = 8,
+            pretrained = True,
+        )
         self.device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
         self.model.to(self.device)
 
