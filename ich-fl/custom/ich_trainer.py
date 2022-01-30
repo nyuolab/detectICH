@@ -44,8 +44,10 @@ from nvflare.app_common.abstract.model import make_model_learnable, model_learna
 from nvflare.app_common.app_constant import AppConstants
 from nvflare.app_common.pt.pt_fed_utils import PTModelPersistenceFormatManager
 from pt_constants import PTConstants
-from resnext_network import MyResNeXtClass#,model_fxn
-from resnext_class import ResNet, Bottleneck
+#from resnext_network import MyResNeXtClass#,model_fxn
+#from resnext_class import ResNet, Bottleneck
+#from monai.networks.nets.SEResNext101 import SEResNext101
+from simple_network import SimpleNetwork
 
 class ICHTrainer(Executor):
 
@@ -74,13 +76,15 @@ class ICHTrainer(Executor):
         # Training setup
         self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
         #self.model = model_fxn(pretrained=True, requires_grad = False)
-        self.model = ResNet(
-            Bottleneck,
-            layers=[3, 4, 23, 3],
-            groups = 32,
-            width_per_group = 8,
-            pretrained = True,
-        )
+        #self.model = ResNet(
+        #    Bottleneck,
+        #    layers=[3, 4, 23, 3],
+        #    groups = 32,
+        #    width_per_group = 8,
+        #    pretrained = True
+        #)
+        self.model = SimpleNetwork()
+        print(self.model)
         self.model.to(self.device)
         self.loss = nn.BCEWithLogitsLoss()
         self.optimizer = Adam(self.model.parameters(), lr=lr)
@@ -119,7 +123,7 @@ class ICHTrainer(Executor):
         for epoch in range(self._epochs):
             print(f'Epoch {epoch+1} of {self._epochs}')
             running_loss = 0.0
-            for i, batch in tqdm(enumerate(self._train_loader),total=int(len(train_data)/dataloader.batch_size)):
+            for i, batch in tqdm(enumerate(self._train_loader),total=int(len(self._train_dataset)/self._train_loader.batch_size)):
                 if abort_signal.triggered:
                     # If abort_signal is triggered, we simply return.
                     # The outside function will check it again and decide steps to take.

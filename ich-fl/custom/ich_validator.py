@@ -42,8 +42,10 @@ from nvflare.apis.fl_context import FLContext
 from nvflare.apis.shareable import Shareable, make_reply
 from nvflare.apis.signal import Signal
 from nvflare.app_common.app_constant import AppConstants
-from resnext_network import MyResNeXtClass #,model_fxn, 
-from resnext_class import ResNet, Bottleneck
+#from resnext_network import MyResNeXtClass #,model_fxn, 
+#from resnext_class import ResNet, Bottleneck
+from simple_network import SimpleNetwork
+
 
 class ICHValidator(Executor):
     
@@ -54,16 +56,17 @@ class ICHValidator(Executor):
 
         # Setup the model
         #self.model = model_fxn(pretrained=True, requires_grad=False)
-        self.model = ResNet(
-            Bottleneck,
-            layers=[3, 4, 23, 3],
-            groups = 32,
-            width_per_group = 8,
-            pretrained = True,
-        )
+        #self.model = ResNet(
+        #    Bottleneck,
+        #    layers=[3, 4, 23, 3],
+        #    groups = 32,
+        #    width_per_group = 8,
+        #    pretrained = True
+        #)
+        self.model = SimpleNetwork()
         self.device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
         self.model.to(self.device)
-
+        
         # Point to the relevent test label data and DICOM files
         train_csv = pd.read_csv('./input/label_dataset/prototype_train_labels.csv')
         data_path = './input/images'
@@ -107,7 +110,7 @@ class ICHValidator(Executor):
 
     def do_validation(self, weights, abort_signal):
         self.model.load_state_dict(weights)
-
+        print(f"\nmodel: {self.model}\n")
         self.model.eval()
 
         correct = 0
@@ -118,10 +121,11 @@ class ICHValidator(Executor):
                     return 0
 
                 images, labels = data['image'].to(self.device), data['label'].to(self.device)
-                output = self.model(images)
-
+                print(f"labels: {labels}")
+                output = torch.sigmoid(self.model(images))
+                print(f"output: {output}")
                 _, pred_label = torch.max(output, 1)
-
+                print(f"pred_label: {pred_label}")
                 correct += (pred_label == labels).sum().item()
                 total += images.size()[0]
 
