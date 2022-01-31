@@ -26,6 +26,9 @@ from pt_constants import PTConstants
 #from resnext_network import MyResNeXtClass#model_fxn,
 #from resnext_class import ResNet, Bottleneck
 from simple_network import SimpleNetwork
+from monai.networks.nets import senet
+from monai.networks.blocks.squeeze_and_excitation import SEResNeXtBottleneck
+
 
 class PTModelLocator(ModelLocator):
 
@@ -40,8 +43,21 @@ class PTModelLocator(ModelLocator):
         #    width_per_group = 8,
         #    pretrained = True
         #)
-        self.model = SimpleNetwork()
+        #self.model = SimpleNetwork()
+        self.model = senet.SENet( #defines a monai SEResNext101 network
+            spatial_dims = 2,
+            in_channels = 3,
+            block = SEResNeXtBottleneck,
+            layers = [3, 4, 23, 3],
+            groups = 32,
+            reduction = 16,
+            inplanes = 64,
+            downsample_kernel_size = 1,
+            input_3x3 = False,
+            num_classes = 6
+        )
         self.exclude_vars = exclude_vars
+
 
     def get_model_names(self, fl_ctx: FLContext) -> List[str]:
         return [PTConstants.PTServerName]

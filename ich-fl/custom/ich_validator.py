@@ -45,6 +45,8 @@ from nvflare.app_common.app_constant import AppConstants
 #from resnext_network import MyResNeXtClass #,model_fxn, 
 #from resnext_class import ResNet, Bottleneck
 from simple_network import SimpleNetwork
+from monai.networks.nets import senet
+from monai.networks.blocks.squeeze_and_excitation import SEResNeXtBottleneck
 
 
 class ICHValidator(Executor):
@@ -63,7 +65,19 @@ class ICHValidator(Executor):
         #    width_per_group = 8,
         #    pretrained = True
         #)
-        self.model = SimpleNetwork()
+        #self.model = SimpleNetwork()
+        self.model = senet.SENet( #defines a monai SEResNext101 network
+            spatial_dims = 2,
+            in_channels = 3,
+            block = SEResNeXtBottleneck,
+            layers = [3, 4, 23, 3],
+            groups = 32,
+            reduction = 16,
+            inplanes = 64,
+            downsample_kernel_size = 1,
+            input_3x3 = False,
+            num_classes = 6
+        )
         self.device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
         self.model.to(self.device)
         

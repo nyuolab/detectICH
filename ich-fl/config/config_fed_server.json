@@ -12,7 +12,18 @@
       "name": "PTFileModelPersistor",
       "args": {
         "model": {
-          "path": "simple_network.SimpleNetwork"
+          "path": "monai.networks.nets.senet.SENet",
+          "args": {
+            "spatial_dims": 2,
+            "in_channels": 3,
+            "block": "SEResNeXtBottleneck",
+            "layers": [3, 4, 23, 3],
+            "groups": 32,
+            "inplanes": 64,
+            "downsample_kernel_size": 1,
+            "input_3x3": "False",
+            "num_classes": 6
+          }
         }
       }
     },
