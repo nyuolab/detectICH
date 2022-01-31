@@ -28,7 +28,7 @@ from pt_constants import PTConstants
 from simple_network import SimpleNetwork
 from monai.networks.nets import senet
 from monai.networks.blocks.squeeze_and_excitation import SEResNeXtBottleneck
-
+from monai_class import SENet
 
 class PTModelLocator(ModelLocator):
 
@@ -44,13 +44,15 @@ class PTModelLocator(ModelLocator):
         #    pretrained = True
         #)
         #self.model = SimpleNetwork()
-        self.model = senet.SENet( #defines a monai SEResNext101 network
+        self.model = SENet( #defines a monai SEResNext101 network
             spatial_dims = 2,
             in_channels = 3,
             block = SEResNeXtBottleneck,
             layers = [3, 4, 23, 3],
             groups = 32,
             reduction = 16,
+            dropout_prob = None,
+            dropout_dim = 1,
             inplanes = 64,
             downsample_kernel_size = 1,
             input_3x3 = False,

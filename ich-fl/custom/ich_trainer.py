@@ -47,6 +47,7 @@ from pt_constants import PTConstants
 #from resnext_network import MyResNeXtClass#,model_fxn
 #from resnext_class import ResNet, Bottleneck
 from monai.networks.nets import senet
+from monai_class import SENet
 from monai.networks.blocks.squeeze_and_excitation import SEResNeXtBottleneck
 from simple_network import SimpleNetwork
 
@@ -85,13 +86,15 @@ class ICHTrainer(Executor):
         #    pretrained = True
         #)
         #self.model = SimpleNetwork()
-        self.model = senet.SENet( #defines a monai SEResNext101 network
+        self.model = SENet( #defines a monai SEResNext101 network
             spatial_dims = 2,
             in_channels = 3,
             block = SEResNeXtBottleneck,
             layers = [3, 4, 23, 3],
             groups = 32,
             reduction = 16,
+            dropout_prob = None,
+            dropout_dim = 1,
             inplanes = 64,
             downsample_kernel_size = 1,
             input_3x3 = False,
