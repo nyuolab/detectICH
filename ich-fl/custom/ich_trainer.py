@@ -84,7 +84,6 @@ class ICHTrainer(Executor):
         #    pretrained = True
         #)
         self.model = SimpleNetwork()
-        print(self.model)
         self.model.to(self.device)
         self.loss = nn.BCEWithLogitsLoss()
         self.optimizer = Adam(self.model.parameters(), lr=lr)

@@ -27,13 +27,10 @@ class SimpleNetwork(nn.Module):
         self.fc2 = nn.Linear(120, 6)
 
     def forward(self, x):
-        print(f"{x.shape}\n")
+
         x = self.pool(F.relu(self.conv1(x)))
-        print(f"pre flatten: {x.shape}\n")
         x = torch.flatten(x, 1)  # flatten all dimensions except batch
-        print(f"post flatten: {x.shape}\n")
         x = F.relu(self.fc1(x))
-        print(f"post relu/fc1: {x.shape}\n")
         x = self.fc2(x)
-        print(f"post fc2: {x.shape}\n")
+
         return x

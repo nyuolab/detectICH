@@ -110,25 +110,32 @@ class ICHValidator(Executor):
 
     def do_validation(self, weights, abort_signal):
         self.model.load_state_dict(weights)
-        print(f"\nmodel: {self.model}\n")
         self.model.eval()
 
         correct = 0
         total = 0
+        # make running array of outputs for f1_score after all data
+        running_output = []
+        running_label = []
         with torch.no_grad():
             for i, data in enumerate(self.test_loader):
                 if abort_signal.triggered:
                     return 0
 
                 images, labels = data['image'].to(self.device), data['label'].to(self.device)
-                print(f"labels: {labels}")
                 output = torch.sigmoid(self.model(images))
-                print(f"output: {output}")
-                _, pred_label = torch.max(output, 1)
-                print(f"pred_label: {pred_label}")
-                correct += (pred_label == labels).sum().item()
-                total += images.size()[0]
+                bin_output = np.where(output > 0.5, 1, 0)
+                #_, pred_label = torch.max(output, 1)
+                #print(f"pred_label: {pred_label}")
+                #correct += (pred_label == labels).sum().item()
+                #total += images.size()[0]
+                running_label.append(np.array(labels).flatten())
+                running_output.append(np.array(bin_output).flatten())
 
-            metric = correct/float(total)
+            #metric = correct/float(total)
+            flat_label = np.array([item for sublist in running_label for item in sublist])
+            flat_output = np.array([item for sublist in running_output for item in sublist])
+            metric = metrics.f1_score(flat_label, flat_output)
+            print(f"f1 metric = {metric}")
 
         return metric
