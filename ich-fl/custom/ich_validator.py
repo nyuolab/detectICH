@@ -43,11 +43,11 @@ from nvflare.apis.shareable import Shareable, make_reply
 from nvflare.apis.signal import Signal
 from nvflare.app_common.app_constant import AppConstants
 #from resnext_network import MyResNeXtClass #,model_fxn, 
-#from resnext_class import ResNet, Bottleneck
+from resnext_class import ResNet, Bottleneck
 from simple_network import SimpleNetwork
-from monai.networks.nets import senet
+from monai.networks.nets.senet import SENet
 from monai.networks.blocks.squeeze_and_excitation import SEResNeXtBottleneck
-from monai_class import SENet
+from monai.networks.nets.unet import UNet
 
 class ICHValidator(Executor):
     
@@ -56,30 +56,16 @@ class ICHValidator(Executor):
 
         self._validate_task_name = validate_task_name
 
-        # Setup the model
-        #self.model = model_fxn(pretrained=True, requires_grad=False)
-        #self.model = ResNet(
-        #    Bottleneck,
-        #    layers=[3, 4, 23, 3],
-        #    groups = 32,
-        #    width_per_group = 8,
-        #    pretrained = True
-        #)
-        #self.model = SimpleNetwork()
-        self.model = SENet( #defines a monai SEResNext101 network
-            spatial_dims = 2,
-            in_channels = 3,
-            block = SEResNeXtBottleneck,
-            layers = [3, 4, 23, 3],
+        # Set up the model
+        self.model = ResNet(
+            Bottleneck,
+            layers=[3, 4, 23, 3],
             groups = 32,
-            reduction = 16,
-            dropout_prob = None,
-            dropout_dim = 1,
-            inplanes = 64,
-            downsample_kernel_size = 1,
-            input_3x3 = False,
-            num_classes = 6
+            width_per_group = 8,
         )
+        #self.model = SimpleNetwork()
+
+        print(type(self.model))
         self.device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
         self.model.to(self.device)
         

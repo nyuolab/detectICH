@@ -12,20 +12,12 @@
       "name": "PTFileModelPersistor",
       "args": {
         "model": {
-          "path": "monai_class.SENet",
+          "path": "resnext_class.ResNet",
           "args": {
-            "spatial_dims": 2,
-            "in_channels": 3,
-            "block": "SEResNeXtBottleneck",
+            "block": "Bottleneck",
             "layers": [3, 4, 23, 3],
             "groups": 32,
-            "reduction": 16,
-            "dropout_prob": "None",
-            "dropout_dim":1,
-            "inplanes": 64,
-            "downsample_kernel_size": 1,
-            "input_3x3": "False",
-            "num_classes": 6
+            "width_per_group": 8
           }
         }
       }
