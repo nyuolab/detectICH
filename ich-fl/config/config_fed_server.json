@@ -12,13 +12,7 @@
       "name": "PTFileModelPersistor",
       "args": {
         "model": {
-          "path": "resnext_class.ResNet",
-          "args": {
-            "block": "Bottleneck",
-            "layers": [3, 4, 23, 3],
-            "groups": 32,
-            "width_per_group": 8
-          }
+          "path": "torchvision.models.resnet.resnext101_32x8d"
         }
       }
     },

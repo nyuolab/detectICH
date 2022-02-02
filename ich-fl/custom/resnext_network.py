@@ -1,4 +1,4 @@
-from torchvision import models as tvmodels
+
 import torch.nn as nn
 import torch
 

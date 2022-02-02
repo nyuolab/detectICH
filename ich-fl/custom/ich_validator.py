@@ -48,6 +48,7 @@ from simple_network import SimpleNetwork
 from monai.networks.nets.senet import SENet
 from monai.networks.blocks.squeeze_and_excitation import SEResNeXtBottleneck
 from monai.networks.nets.unet import UNet
+from torchvision import models as tvmodels
 
 class ICHValidator(Executor):
     
@@ -57,15 +58,8 @@ class ICHValidator(Executor):
         self._validate_task_name = validate_task_name
 
         # Set up the model
-        self.model = ResNet(
-            Bottleneck,
-            layers=[3, 4, 23, 3],
-            groups = 32,
-            width_per_group = 8,
-        )
-        #self.model = SimpleNetwork()
-
-        print(type(self.model))
+        self.model = tvmodels.resnext101_32x8d(pretrained=True, progress=True)
+        self.model.fc = nn.Linear(2048,6)
         self.device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
         self.model.to(self.device)
         

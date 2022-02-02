@@ -16,7 +16,8 @@ import os
 from typing import List, Union
 
 import torch.cuda
-
+import torch.nn as nn 
+from torchvision import models as tvmodels
 from nvflare.apis.dxo import DXO
 from nvflare.apis.fl_context import FLContext
 from nvflare.app_common.abstract.model import model_learnable_to_dxo
@@ -29,21 +30,18 @@ from simple_network import SimpleNetwork
 from monai.networks.blocks.squeeze_and_excitation import SEResNeXtBottleneck
 from monai.networks.nets.unet import UNet
 from monai.networks.nets.senet import SENet
+from torchvision import models as tvmodel
+
 
 class PTModelLocator(ModelLocator):
 
     def __init__(self, exclude_vars=None, model=None):
         super(PTModelLocator, self).__init__()
 
-        self.model = ResNet(
-            Bottleneck,
-            layers=[3, 4, 23, 3],
-            groups = 32,
-            width_per_group = 8,
-        )
-        #self.model = SimpleNetwork()
 
-        print(type(self.model))
+        self.model = tvmodels.resnext101_32x8d(pretrained=True, progress=True)
+        self.model.fc = nn.Linear(2048,6)
+ 
         self.exclude_vars = exclude_vars
 
 

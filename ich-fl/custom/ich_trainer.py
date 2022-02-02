@@ -19,7 +19,7 @@ from torch.optim import Adam
 from torch.utils.data.dataloader import DataLoader
 from torchvision.datasets import CIFAR10
 from torchvision.transforms import ToTensor, Normalize, Compose
-
+from torchvision import models as tvmodels
 # From train.py --probably can trim this down
 import torch
 import torch.nn as nn
@@ -44,12 +44,7 @@ from nvflare.app_common.abstract.model import make_model_learnable, model_learna
 from nvflare.app_common.app_constant import AppConstants
 from nvflare.app_common.pt.pt_fed_utils import PTModelPersistenceFormatManager
 from pt_constants import PTConstants
-from resnext_network import MyResNeXtClass#,model_fxn
-from resnext_class import ResNet, Bottleneck
-from monai.networks.nets.senet import SENet
-from monai.networks.blocks.squeeze_and_excitation import SEResNeXtBottleneck
-from simple_network import SimpleNetwork
-from monai.networks.nets.unet import UNet
+
 
 class ICHTrainer(Executor):
 
@@ -77,15 +72,8 @@ class ICHTrainer(Executor):
 
         # Training setup
         self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-        self.model = ResNet(
-            Bottleneck,
-            layers=[3, 4, 23, 3],
-            groups = 32,
-            width_per_group = 8
-        )
-        #self.model = SimpleNetwork()
-
-        print(type(self.model))
+        self.model = tvmodels.resnext101_32x8d(pretrained=True, progress=True)
+        self.model.fc = nn.Linear(2048,6)
         self.model.to(self.device)
         self.loss = nn.BCEWithLogitsLoss()
         self.optimizer = Adam(self.model.parameters(), lr=lr)
