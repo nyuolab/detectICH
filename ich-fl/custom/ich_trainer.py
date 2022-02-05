@@ -48,7 +48,7 @@ from pt_constants import PTConstants
 
 class ICHTrainer(Executor):
 
-    def __init__(self, lr=0.01, epochs=5, train_task_name=AppConstants.TASK_TRAIN,
+    def __init__(self, lr=0.01, epochs=3, train_task_name=AppConstants.TASK_TRAIN,
                  submit_model_task_name=AppConstants.TASK_SUBMIT_MODEL, exclude_vars=None):
         """Cifar10 Trainer handles train and submit_model tasks. During train_task, it trains a
         simple network on CIFAR10 dataset. For submit_model task, it sends the locally trained model

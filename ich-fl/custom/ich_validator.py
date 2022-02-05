@@ -45,9 +45,6 @@ from nvflare.app_common.app_constant import AppConstants
 #from resnext_network import MyResNeXtClass #,model_fxn, 
 from resnext_class import ResNet, Bottleneck
 from simple_network import SimpleNetwork
-from monai.networks.nets.senet import SENet
-from monai.networks.blocks.squeeze_and_excitation import SEResNeXtBottleneck
-from monai.networks.nets.unet import UNet
 from torchvision import models as tvmodels
 
 class ICHValidator(Executor):
@@ -120,12 +117,13 @@ class ICHValidator(Executor):
 
                 images, labels = data['image'].to(self.device), data['label'].to(self.device)
                 output = torch.sigmoid(self.model(images))
-                bin_output = np.where(output > 0.5, 1, 0)
+                bin_output = np.where(output.cpu() > 0.5, 1, 0)
                 #_, pred_label = torch.max(output, 1)
                 #print(f"pred_label: {pred_label}")
                 #correct += (pred_label == labels).sum().item()
                 #total += images.size()[0]
-                running_label.append(np.array(labels).flatten())
+                label_cpu = labels.cpu()
+                running_label.append(np.array(label_cpu).flatten())
                 running_output.append(np.array(bin_output).flatten())
 
             #metric = correct/float(total)
