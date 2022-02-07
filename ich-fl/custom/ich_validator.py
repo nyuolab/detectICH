@@ -14,7 +14,6 @@
 
 import torch
 from torch.utils.data import DataLoader
-from torchvision.datasets import CIFAR10
 from torchvision.transforms import Compose, ToTensor, Normalize
 import os
 
@@ -26,14 +25,12 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib
 import numpy as np
-from fl_engine import train, validate # I don't think I need this...
 from fl_dataset_class import IntracranialDataset
 from torch.utils.data import DataLoader
 from torch.optim import lr_scheduler
 from datetime import date
 from sklearn import metrics
 from tqdm import tqdm
-
 #
 from nvflare.apis.dxo import from_shareable, DataKind, DXO
 from nvflare.apis.executor import Executor
@@ -42,9 +39,6 @@ from nvflare.apis.fl_context import FLContext
 from nvflare.apis.shareable import Shareable, make_reply
 from nvflare.apis.signal import Signal
 from nvflare.app_common.app_constant import AppConstants
-#from resnext_network import MyResNeXtClass #,model_fxn, 
-from resnext_class import ResNet, Bottleneck
-from simple_network import SimpleNetwork
 from torchvision import models as tvmodels
 
 class ICHValidator(Executor):
