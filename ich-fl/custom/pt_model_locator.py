@@ -24,14 +24,6 @@ from nvflare.app_common.abstract.model import model_learnable_to_dxo
 from nvflare.app_common.abstract.model_locator import ModelLocator
 from nvflare.app_common.pt.pt_fed_utils import PTModelPersistenceFormatManager
 from pt_constants import PTConstants
-#from resnext_network import MyResNeXtClass#model_fxn,
-from resnext_class import ResNet, Bottleneck
-from simple_network import SimpleNetwork
-from monai.networks.blocks.squeeze_and_excitation import SEResNeXtBottleneck
-from monai.networks.nets.unet import UNet
-from monai.networks.nets.senet import SENet
-from torchvision import models as tvmodel
-
 
 class PTModelLocator(ModelLocator):
 
