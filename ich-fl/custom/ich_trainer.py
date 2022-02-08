@@ -87,8 +87,8 @@ class ICHTrainer(Executor):
         #    Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
         #])
         # Point to the relevent test label data and DICOM files
-        train_csv = pd.read_csv('./input/label_dataset/prototype_train_labels.csv')
-        data_path = './input/images'
+        train_csv = pd.read_csv('./input/labels.csv')
+        data_path = './input/data'
 
         #self._train_dataset = CIFAR10(root='~/data', transform=transforms, download=True, train=True)
         self._train_dataset = IntracranialDataset(train_csv, path=data_path,train=True,test=False)

@@ -55,8 +55,8 @@ class ICHValidator(Executor):
         self.model.to(self.device)
         
         # Point to the relevent test label data and DICOM files
-        train_csv = pd.read_csv('./input/label_dataset/prototype_train_labels.csv')
-        data_path = './input/images'
+        train_csv = pd.read_csv('./input/labels.csv')
+        data_path = './input/data'
         self.test_data = IntracranialDataset(train_csv, path=data_path, train=False, test=False)
         self.test_loader = DataLoader(self.test_data, batch_size=8, shuffle=False)
 
