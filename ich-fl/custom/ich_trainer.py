@@ -48,12 +48,9 @@ from pt_constants import PTConstants
 
 class ICHTrainer(Executor):
 
-    def __init__(self, lr=0.01, epochs=3, train_task_name=AppConstants.TASK_TRAIN,
+    def __init__(self, lr=0.01, epochs=6, train_task_name=AppConstants.TASK_TRAIN,
                  submit_model_task_name=AppConstants.TASK_SUBMIT_MODEL, exclude_vars=None):
-        """Cifar10 Trainer handles train and submit_model tasks. During train_task, it trains a
-        simple network on CIFAR10 dataset. For submit_model task, it sends the locally trained model
-        (if present) to the server.
-
+        """
         Args:
             lr (float, optional): Learning rate. Defaults to 0.01
             epochs (int, optional): Epochs. Defaults to 5
@@ -81,16 +78,10 @@ class ICHTrainer(Executor):
         self.scheduler = lr_scheduler.StepLR(self.optimizer, step_size = 3, gamma=0.1)
 
 
-        # Create Cifar10 dataset for training.
-        #transforms = Compose([
-        #    ToTensor(),
-        #    Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
-        #])
         # Point to the relevent test label data and DICOM files
         train_csv = pd.read_csv('./input/labels.csv')
         data_path = './input/data'
 
-        #self._train_dataset = CIFAR10(root='~/data', transform=transforms, download=True, train=True)
         self._train_dataset = IntracranialDataset(train_csv, path=data_path,train=True,test=False)
         self._train_loader = DataLoader(self._train_dataset, batch_size=batch_size, shuffle=True)
         self._n_iterations = len(self._train_loader)
@@ -125,7 +116,6 @@ class ICHTrainer(Executor):
                 cost.backward()
                 self.optimizer.step()
 
-                # Ask jiahui significance of 3000? b/c CIFAR10 has 60,000 images?
                 running_loss += (cost.cpu().detach().numpy()/images.size()[0])
                 if i % 3000 == 0:
                     self.log_info(fl_ctx, f"Epoch: {epoch}/{self._epochs}, Iteration: {i}, "
