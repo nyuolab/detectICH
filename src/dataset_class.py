@@ -53,7 +53,7 @@ class IntracranialDataset(Dataset):
 
   def __getitem__(self, idx):
     img_path = os.path.join(self.path, self.image_names[idx] + '.dcm')
-    image = _read(img_path, self.img_size)
+    image = _read(img_path, desired_size = (256, 256, 3)))
     # Transform images
     image = self.transform(image)
     targets = torch.from_numpy(self.labels[idx])
