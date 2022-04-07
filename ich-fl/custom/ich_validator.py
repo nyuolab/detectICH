@@ -128,26 +128,24 @@ class ICHValidator(Executor):
         metrics_output = {}
 
         for i in range(len(label_list)):
-            print(f'subtype: {label_list[i]}')
+            print(f'\nMetrics for subtype: {label_list[i]}')
             subtype_labels=np.array(running_labels[:, i]).flatten()
             subtype_outputs=np.array(running_outputs[:, i]).flatten()
 
             # Calculate ROC AUC for subtype
-            print(f'\nROC_auc for subtype {label_list[i]}... ')
             fpr, tpr, _ = metrics.roc_curve(subtype_labels, subtype_outputs)
-            roc_auc = metrics.auc(fpr, tpr)
-            print(roc_auc)
+            roc_auc = round(metrics.auc(fpr, tpr), 5)
+            print(f'ROC_auc: {roc_auc}')
             # Caclulate PRC AUC for subtype
-            print(f'\nPRC_auc for subtype {label_list[i]}... ')
             precision, recall, thresholds = metrics.precision_recall_curve(subtype_labels, subtype_outputs)
-            prc_auc = metrics.auc(recall, precision)
-            print(prc_auc)
+            prc_auc = round(metrics.auc(recall, precision), 5)
+            print(f'PRC_auc: {prc_auc}')
             # Calculate accuracy using threshold for binary
             bin_threshold = 0.4
-            print(f'\nAccuracy for subtype {label_list[i]} with bin_thresh = {bin_threshold}... ')
             bin_output = np.where(subtype_outputs > bin_threshold, 1, 0)
-            acc = metrics.accuracy_score(subtype_labels, bin_output)
-            print(acc)
+            acc = round(metrics.accuracy_score(subtype_labels, bin_output), 5)
+            print(f'Accuracy with bin_thresh of {bin_threshold}: {acc}')
+
             #bin_output = np.where(output.cpu() > 0.5, 1, 0)
             #_, pred_label = torch.max(output, 1)
             #print(f"pred_label: {pred_label}")
@@ -163,6 +161,8 @@ class ICHValidator(Executor):
             #print(f"f1 metric = {metric}")
 
             metrics_output[label_list[i]]=(roc_auc, prc_auc, acc)
-        print(f"\nResults of metrics are...\n")
-        print(metrics_output)
+        print('\n++++++++++++++++++++++++++++\n')
+        print(f"\nResults of metrics (ROC_auc, PRC_auc, and acc) are: {metrics_output}")
+        print('\n++++++++++++++++++++++++++++\n')
+
         return metrics_output
