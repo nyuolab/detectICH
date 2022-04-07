@@ -1,3 +1,4 @@
+
 import models
 import torch
 import torch.nn as nn
@@ -40,12 +41,16 @@ valid_data = IntracranialDataset(
 
 ## Learning parameters
 lr = 0.0003
-epochs = 10
-batch_size = 8
+epochs = 40
+batch_size = 16
 optimizer = optim.Adam(model.parameters(), lr=lr)
 #scheduler = lr_scheduler.StepLR(optimizer, step_size=3, gamma=0.1)
-# Define loss criterion with weights
-criterion = nn.BCEWithLogitsLoss(pos_weight=train_data['loss_weights'])
+
+## Define loss criterion with weights
+loss_weights=train_data.loss_weights.to(device)
+print(f'loss weights: {loss_weights}')
+criterion = nn.BCEWithLogitsLoss(loss_weights)
+#criterion = nn.BCEWithLogitsLoss()
 
 #train data loader
 train_loader = DataLoader(
@@ -124,6 +129,6 @@ torch.save({
     'model_state_dict': model.state_dict(),
     'optimizer_state_dict': optimizer.state_dict(),
     'loss': criterion,
-}, f'../output/{epoch}_model.pth')
+}, f'../output/{epoch}_model.pt')
 
 

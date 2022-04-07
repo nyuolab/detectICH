@@ -35,7 +35,7 @@ class IntracranialDataset(Dataset):
       
       # read csv
       site_labels_csv = pd.read_csv(labels_path)
-      
+      site_labels_csv = site_labels_csv.sample(frac=1)
       # Extract image names and labels
       site_image_names = site_labels_csv[:]['Image']
       site_image_paths = site_path + '/input/data/' + site_image_names + '.dcm'
@@ -87,23 +87,23 @@ class IntracranialDataset(Dataset):
 
     ## Calculate the proportion of different labels to weight the loss
     total_n_samples = np.array(self.master_labels).shape[0]
-    print(f"total samples: {total_n_samples}")
+    print(f"\ntotal samples: {total_n_samples}")
     n_per_subtype = np.sum(self.master_labels, axis = 0)
-    print(n_per_subtype)
+    print(f'number samples per subtype: {n_per_subtype}')
 
     n_positives = n_per_subtype[0]
     n_negatives = total_n_samples - n_positives
     
     #
-    self.neg_pos_ratio = n_negatives / total_n_samples
-    print(f'neg:pos ratio for loss weight: {self.neg_pos_ratio}')
+    self.loss_weights = torch.from_numpy(n_negatives / n_per_subtype)
+    print(f'neg:pos ratio for loss weight: {self.loss_weights}')
 
 
     if self.train == True:
       print(f'\nTotal training set contains {len(self.master_image_paths)} images')
       img_dict = {'Image': self.master_image_names}
       df = pd.DataFrame(img_dict)
-      df.to_csv('../' + 'all_site_training_subset.csv')
+      df.to_csv('../output/all_site_training_subset.csv')
     elif self.train == False and self.test == False:
       print(f'\nTotal validation set contains {len(self.master_image_paths)} images')
 
@@ -121,7 +121,6 @@ class IntracranialDataset(Dataset):
     return {'sample_id': sample_id,
             'image': image.detach().clone().float(),
             'label': targets.detach().clone().float(),
-            'loss_weights': self.neg_pos_ratio
       }
 
 ## Functions to Normalize DCM images

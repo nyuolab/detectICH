@@ -10,6 +10,7 @@ def train(model, dataloader, optimizer, criterion, train_data, device):
   train_running_loss = 0.0
   train_running_preds = []
   train_running_labels = []
+  
   for i, data in tqdm(enumerate(dataloader), total=int(len(train_data)/dataloader.batch_size)):
     counter += 1 
     image, target = data['image'].to(device), data['label'].to(device)
@@ -18,6 +19,7 @@ def train(model, dataloader, optimizer, criterion, train_data, device):
     sigmoid_outputs = torch.sigmoid(outputs)
     # Apply sigmoid activation so outputs are b/t 0 and 1
     #outputs = torch.sigmoid(outputs) ## commented out with nn.BCEWithLogitsLoss as criterion instead
+    print(criterion)
     loss = criterion(outputs, target)
     train_running_loss += loss.item()
 
