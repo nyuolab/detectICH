@@ -132,10 +132,12 @@ class ICHValidator(Executor):
         metrics_output = {}
 
         for i in range(len(label_list)):
+            
             subtype_labels=np.array(running_labels[:, i]).flatten()
             subtype_outputs=np.array(running_outputs[:, i]).flatten()
             print(subtype_labels)
             print(subtype_outputs)
+
             #
             fpr, tpr, _ = metrics.roc_curve(subtype_labels, subtype_outputs)
             roc_auc = metrics.auc(fpr, tpr)
@@ -143,7 +145,7 @@ class ICHValidator(Executor):
             precision, recall, thresholds = metrics.precision_recall_curve(subtype_labels, subtype_outputs)
             prc_auc = metrics.auc(recall, precision)
 
-            acc = metrics.accuracy_score(running_labels, running_outputs)
+            acc = metrics.accuracy_score(subtype_labels, subtype_outputs)
             #bin_output = np.where(output.cpu() > 0.5, 1, 0)
             #_, pred_label = torch.max(output, 1)
             #print(f"pred_label: {pred_label}")
