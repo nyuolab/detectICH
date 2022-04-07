@@ -126,15 +126,16 @@ class ICHValidator(Executor):
                     running_outputs=torch.cat((running_outputs, outputs.cpu()))
 
         print('\n+++++++++++++\n')
-        print(f'\nvalidation ste running_labels: {running_labels}')
-        print(f'validation ste running_outputs: {running_labels}\n')
+        print(f'\nvalidation step running_labels: {running_labels}')
+        print(f'validation step running_outputs: {running_outputs}\n')
         print('\n++++++++\n')
         metrics_output = {}
 
         for i in range(len(label_list)):
             subtype_labels=np.array(running_labels[:, i]).flatten()
             subtype_outputs=np.array(running_outputs[:, i]).flatten()
-
+            print(subtype_labels)
+            print(subtype_outputs)
             #
             fpr, tpr, _ = metrics.roc_curve(subtype_labels, subtype_outputs)
             roc_auc = metrics.auc(fpr, tpr)
