@@ -17,8 +17,8 @@ runtime_day = date.today().strftime("%b-%d-%Y")
 matplotlib.style.use('ggplot')
 
 # Point to the relevent test label data and DICOM files
-train_csv = pd.read_csv('../input/label_dataset/prototype_train_labels.csv')
-data_path = '../input/images'
+#train_csv = pd.read_csv('../input/label_dataset/prototype_train_labels.csv')
+data_path = '../all_sites/'
 
 # initialize computation device
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -28,21 +28,20 @@ model = models.model_fxn(pretrained=True, requires_grad = False).to(device)
 # ResNext101 is 340 Mb
 
 # Learning parameters
-lr = 0.01
-epochs = 12
-batch_size = 16
+lr = 0.0003
+epochs = 10
+batch_size = 8
 optimizer = optim.Adam(model.parameters(), lr=lr)
-criterion = nn.BCEWithLogitsLoss()
-scheduler = lr_scheduler.StepLR(optimizer, step_size=3, gamma=0.1)
+#scheduler = lr_scheduler.StepLR(optimizer, step_size=3, gamma=0.1)
 
 #train dataset
 train_data = IntracranialDataset(
-    train_csv, path=data_path, train=True, test=False
+    path=data_path, train=True, test=False
 )
 
 #Validation
 valid_data = IntracranialDataset(
-    train_csv, path=data_path, train=False, test=False
+    path=data_path, train=False, test=False
 )
 
 #train data loader
@@ -59,6 +58,9 @@ valid_loader = DataLoader(
     shuffle = False
 )
 
+# Define loss criterion with weights
+criterion = nn.BCEWithLogitsLoss(pos_weight = valid_data['loss_weights'])
+
 # start training and validation
 train_loss = []
 valid_loss = []
@@ -68,7 +70,7 @@ learning_rate = []
 
 for epoch in range(epochs):
   print(f"Epoch {epoch+1} of {epochs}")
-  train_results = train(model, train_loader, optimizer, criterion, scheduler, train_data, device)
+  train_results = train(model, train_loader, optimizer, criterion, train_data, device)
   valid_results = validate(model, valid_loader, criterion, valid_data, device)
   #Save values for output
   train_loss.append(train_results['train_loss'])
@@ -77,10 +79,11 @@ for epoch in range(epochs):
   ## Calculate accuracy (correct label for any of the 6 subclasses)
   flat_train_pred = np.array([item for sublist in train_results['pred'] for item in sublist])
   flat_train_label = np.array([item for sublist in train_results['label'] for item in sublist])
-  train_acc = metrics.accuracy_score(flat_train_label, np.where(flat_train_pred > 0.5, 1, 0))
+  train_acc = metrics.f1_score(flat_train_label, np.where(flat_train_pred > 0.5, 1, 0))
+   
   flat_val_pred = np.array([item for sublist in valid_results['pred'] for item in sublist])
   flat_val_label = np.array([item for sublist in valid_results['label'] for item in sublist])
-  val_acc = metrics.accuracy_score(flat_val_label, np.where(flat_val_pred > 0.5, 1, 0))
+  val_acc = metrics.f1_score(flat_val_label, np.where(flat_val_pred > 0.5, 1, 0))
 
   train_accuracy.append(train_acc)
   valid_accuracy.append(val_acc)

@@ -3,7 +3,7 @@ import torch
 from tqdm import tqdm
 
 #Training fxn
-def train(model, dataloader, optimizer, criterion, scheduler, train_data, device):
+def train(model, dataloader, optimizer, criterion, train_data, device):
   print('training...')
   model.train()
   counter = 0
@@ -27,7 +27,7 @@ def train(model, dataloader, optimizer, criterion, scheduler, train_data, device
     loss.backward()
     #update optimizer parameters
     optimizer.step()
-  scheduler.step()
+  #scheduler.step()
   # Computes training loss by dividing total loss by number of batches
   train_loss = train_running_loss / counter
   return {'train_loss': train_loss, 'pred':train_running_preds, 'label':train_running_labels}

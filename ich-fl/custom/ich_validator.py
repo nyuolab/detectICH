@@ -17,13 +17,10 @@ from torch.utils.data import DataLoader
 from torchvision.transforms import Compose, ToTensor, Normalize
 import os
 
-# From train.py --probably can trim this down
-import torch
 import torch.nn as nn
 import torch.optim as optim
 import pandas as pd
 import matplotlib.pyplot as plt
-import matplotlib
 import numpy as np
 from fl_dataset_class import IntracranialDataset
 from torch.utils.data import DataLoader
@@ -80,14 +77,21 @@ class ICHValidator(Executor):
                 weights = {k: torch.as_tensor(v, device=self.device) for k, v in dxo.data.items()}
 
                 # Get validation accuracy
-                val_accuracy = self.do_validation(weights, abort_signal)
+                validation_results = self.do_validation(weights, abort_signal)
+                any_results = validation_results['any']
+                epidural_results = validation_results['epidural']
+                intraparenchymal_results = validation_results['intraparenchymal']
+                intraventricular_results = validation_results['intraventricular']
+                subarachnoid_results = validation_results['subarachnoid']
+                subdural_results = validation_results['subdural']
+
                 if abort_signal.triggered:
                     return make_reply(ReturnCode.TASK_ABORTED)
 
-                self.log_info(fl_ctx, f"Accuracy when validating {model_owner}'s model on"
-                                      f" {fl_ctx.get_identity_name()}"f's data: {val_accuracy}')
+                self.log_info(fl_ctx, f"ROC_auc, PRC_auc, and accuracy when validating {model_owner}'s model on"
+                                      f" {fl_ctx.get_identity_name()}"f's data: {any_results}')
 
-                dxo = DXO(data_kind=DataKind.METRICS, data={'val_acc': val_accuracy})
+                dxo = DXO(data_kind=DataKind.METRICS, data={'any': any_results, 'epidural': epidural_results, 'intraparenchymal': intraparenchymal_results,'intraventricular':intraventricular_results, 'subarachnoid':subarachnoid_results, 'subdural':subdural_results})
                 return dxo.to_shareable()
             except:
                 self.log_exception(fl_ctx, f"Exception in validating model from {model_owner}")
@@ -102,28 +106,54 @@ class ICHValidator(Executor):
         correct = 0
         total = 0
         # make running array of outputs for f1_score after all data
-        running_output = []
-        running_label = []
+        running_outputs = None
+        running_labels = None
+        label_list = ['any', 'epidural', 'intraparenchymal', 'intraventricular', 'subarachnoid', 'subdural']
         with torch.no_grad():
             for i, data in enumerate(self.test_loader):
                 if abort_signal.triggered:
                     return 0
 
                 images, labels = data['image'].to(self.device), data['label'].to(self.device)
-                output = torch.sigmoid(self.model(images))
-                bin_output = np.where(output.cpu() > 0.5, 1, 0)
-                #_, pred_label = torch.max(output, 1)
-                #print(f"pred_label: {pred_label}")
-                #correct += (pred_label == labels).sum().item()
-                #total += images.size()[0]
-                label_cpu = labels.cpu()
-                running_label.append(np.array(label_cpu).flatten())
-                running_output.append(np.array(bin_output).flatten())
+                outputs = torch.sigmoid(self.model(images))
+
+                if i == 0:
+                    running_labels=labels.cpu()
+                    running_outputs=outputs.cpu()
+                else:
+                    running_labels=torch.cat((running_labels, labels.cpu()))
+                    running_outputs=torch.cat((running_outputs, outputs.cpu()))
+
+
+        metrics_output = {}
+
+        for i in range(len(label_list)):
+            subtype_labels=np.array(running_labels[:, i]).flatten()
+            subtype_outputs=np.array(running_outputs[:, i]).flatten()
+
+            #
+            fpr, tpr, _ = metrics.roc_curve(subtype_labels, subtype_outputs)
+            roc_auc = metrics.auc(fpr, tpr)
+            #
+            precision, recall, thresholds = metrics.precision_recall_curve(subtype_labels, subtype_outputs)
+            prc_auc = metrics.auc(recall, precision)
+
+            acc = metrics.accuracy_score(running_labels, running_outputs)
+            #bin_output = np.where(output.cpu() > 0.5, 1, 0)
+            #_, pred_label = torch.max(output, 1)
+            #print(f"pred_label: {pred_label}")
+            #correct += (pred_label == labels).sum().item()
+            #total += images.size()[0]
 
             #metric = correct/float(total)
-            flat_label = np.array([item for sublist in running_label for item in sublist])
-            flat_output = np.array([item for sublist in running_output for item in sublist])
-            metric = metrics.f1_score(flat_label, flat_output)
-            print(f"f1 metric = {metric}")
+            #flat_label = np.array([item for sublist in running_label for item in sublist])
+            #flat_output = np.array([item for sublist in running_output for item in sublist])
+            #print(flat_output)
+            
+            #metric = metrics.f1_score(flat_label, flat_output)
+            #print(f"f1 metric = {metric}")
 
-        return metric
+            metrics_output[label_list[i]]=(roc_auc, prc_auc, acc)
+            print(f"\nResults of metrics are...\n")
+            print(metrics_output)
+        return metrics_output

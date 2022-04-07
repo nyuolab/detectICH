@@ -1,3 +1,4 @@
+from cgi import test
 import models
 import torch
 import numpy as np
@@ -6,10 +7,11 @@ import matplotlib.pyplot as plt
 
 from dataset_class import IntracranialDataset
 from torch.utils.data import DataLoader
+from tqdm import tqdm
 
 # Point to the relevent test label data and DICOM files
-testing_data = pd.read_csv('../input/label_dataset/prototype_test_labels.csv')
-data_path = '../input/images'
+testing_data = pd.read_csv('../input/label_dataset/prototype_test_labels.csv') # CSV with the ground-truth labels
+data_path = '../input/data' # folder containing dicom images
 
 #Inference
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -18,7 +20,8 @@ model_inf = models.model_fxn(pretrained = False, requires_grad = False).to(devic
 # load model checkpoint
 checkpoint = torch.load('../output/model.pth')
 # load model weights state_dict
-model_inf.load_state_dict(checkpoint['model_state_dict'])
+#model_inf.load_state_dict(checkpoint['model_state_dict'])
+model_inf.load_state_dict(checkpoint['model']) # if using FL model
 model_inf.eval()
 
 
@@ -38,7 +41,7 @@ test_loader = DataLoader(
 samples = []
 pred_labels = []
 ground_truth = []
-for counter, data in enumerate(test_loader):
+for counter, data in tqdm(enumerate(test_loader), total=int(len(test_data)/test_loader.batch_size)):
     image, target = data['image'].to(device), data['label']
     # get all the index positions where value == 1
     target_indices = [i for i in range(len(target[0])) if target[0][i] == 1]
