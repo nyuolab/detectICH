@@ -125,10 +125,6 @@ class ICHValidator(Executor):
                     running_labels=torch.cat((running_labels, labels.cpu()))
                     running_outputs=torch.cat((running_outputs, outputs.cpu()))
 
-        print('\n+++++++++++++\n')
-        print(f'\nvalidation step running_labels: {running_labels}')
-        print(f'validation step running_outputs: {running_outputs}\n')
-        print('\n++++++++\n')
         metrics_output = {}
 
         for i in range(len(label_list)):
@@ -167,6 +163,6 @@ class ICHValidator(Executor):
             #print(f"f1 metric = {metric}")
 
             metrics_output[label_list[i]]=(roc_auc, prc_auc, acc)
-            print(f"\nResults of metrics are...\n")
-            print(metrics_output)
+        print(f"\nResults of metrics are...\n")
+        print(metrics_output)
         return metrics_output
