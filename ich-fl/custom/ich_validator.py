@@ -88,7 +88,7 @@ class ICHValidator(Executor):
 
                 if abort_signal.triggered:
                     return make_reply(ReturnCode.TASK_ABORTED)
-                print('\n++++++++++++++++++++')
+
                 self.log_info(fl_ctx, f"\n \n++++++++++++++++++++++++\n"
                                       f"ROC_auc, PRC_auc, and accuracy when validating {model_owner}'s model on"
                                       f" {fl_ctx.get_identity_name()}"f's data: {any_results}')

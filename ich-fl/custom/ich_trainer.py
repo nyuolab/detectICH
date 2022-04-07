@@ -48,7 +48,7 @@ from pt_constants import PTConstants
 
 class ICHTrainer(Executor):
 
-    def __init__(self, lr=0.0003, epochs=1, train_task_name=AppConstants.TASK_TRAIN,
+    def __init__(self, lr=0.0003, epochs=5, train_task_name=AppConstants.TASK_TRAIN,
                  submit_model_task_name=AppConstants.TASK_SUBMIT_MODEL, exclude_vars=None):
         """
         Args:
@@ -73,7 +73,7 @@ class ICHTrainer(Executor):
         self.model.fc = nn.Linear(2048,6)
         self.model.to(self.device)
         self.optimizer = Adam(self.model.parameters(), lr=lr)
-        batch_size = 8
+        batch_size = 16
         #self.scheduler = lr_scheduler.StepLR(self.optimizer, step_size = 3, gamma=0.1)
 
 
