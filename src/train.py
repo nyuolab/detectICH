@@ -49,7 +49,7 @@ optimizer = optim.Adam(model.parameters(), lr=lr)
 ## Define loss criterion with weights
 loss_weights=train_data.loss_weights.to(device)
 print(f'loss weights: {loss_weights}')
-criterion = nn.BCEWithLogitsLoss(loss_weights)
+criterion = nn.BCEWithLogitsLoss(pos_weight=loss_weights)
 #criterion = nn.BCEWithLogitsLoss()
 
 #train data loader

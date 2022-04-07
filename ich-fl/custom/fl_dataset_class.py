@@ -48,6 +48,19 @@ class IntracranialDataset(Dataset):
                                            transforms.ToTensor()
       ])
 
+    ## Calculate the proportion of different labels to weight the loss
+    total_n_samples = np.array(self.labels).shape[0]
+    print(f"\ntotal samples: {total_n_samples}")
+    n_per_subtype = np.sum(self.labels, axis = 0)
+    print(f'number samples per subtype: {n_per_subtype}')
+
+    n_positives = n_per_subtype[0]
+    n_negatives = total_n_samples - n_positives
+    
+    #
+    self.loss_weights = torch.from_numpy(n_negatives / n_per_subtype)
+    print(f'neg:pos ratio for loss weight: {self.loss_weights}')
+
   def __len__(self):
     return len(self.image_names)
 

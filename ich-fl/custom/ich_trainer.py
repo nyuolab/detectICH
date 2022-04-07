@@ -48,7 +48,7 @@ from pt_constants import PTConstants
 
 class ICHTrainer(Executor):
 
-    def __init__(self, lr=0.01, epochs=6, train_task_name=AppConstants.TASK_TRAIN,
+    def __init__(self, lr=0.0003, epochs=6, train_task_name=AppConstants.TASK_TRAIN,
                  submit_model_task_name=AppConstants.TASK_SUBMIT_MODEL, exclude_vars=None):
         """
         Args:
@@ -72,10 +72,9 @@ class ICHTrainer(Executor):
         self.model = tvmodels.resnext101_32x8d(pretrained=True, progress=True)
         self.model.fc = nn.Linear(2048,6)
         self.model.to(self.device)
-        self.loss = nn.BCEWithLogitsLoss()
         self.optimizer = Adam(self.model.parameters(), lr=lr)
         batch_size = 8
-        self.scheduler = lr_scheduler.StepLR(self.optimizer, step_size = 3, gamma=0.1)
+        #self.scheduler = lr_scheduler.StepLR(self.optimizer, step_size = 3, gamma=0.1)
 
 
         # Point to the relevent test label data and DICOM files
@@ -85,6 +84,11 @@ class ICHTrainer(Executor):
         self._train_dataset = IntracranialDataset(train_csv, path=data_path,train=True,test=False)
         self._train_loader = DataLoader(self._train_dataset, batch_size=batch_size, shuffle=True)
         self._n_iterations = len(self._train_loader)
+        # Define weighted loss for imabalanced dataset
+        loss_weights = self._train_dataset.loss_weights.to(self.device)
+        print(f'\nloss weights: {loss_weights}\n')
+        self.loss = nn.BCEWithLogitsLoss(pos_weight=loss_weights)
+
 
         # Setup the persistence manager to save PT model.
         # The default training configuration is used by persistence manager
@@ -121,7 +125,7 @@ class ICHTrainer(Executor):
                     self.log_info(fl_ctx, f"Epoch: {epoch}/{self._epochs}, Iteration: {i}, "
                                           f"Loss: {running_loss/3000}")
                     running_loss = 0.0
-            self.scheduler.step()
+            #self.scheduler.step()
 
     def execute(self, task_name: str, shareable: Shareable, fl_ctx: FLContext, abort_signal: Signal) -> Shareable:
         try:

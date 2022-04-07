@@ -19,7 +19,6 @@ def train(model, dataloader, optimizer, criterion, train_data, device):
     sigmoid_outputs = torch.sigmoid(outputs)
     # Apply sigmoid activation so outputs are b/t 0 and 1
     #outputs = torch.sigmoid(outputs) ## commented out with nn.BCEWithLogitsLoss as criterion instead
-    print(criterion)
     loss = criterion(outputs, target)
     train_running_loss += loss.item()
 

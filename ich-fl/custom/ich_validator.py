@@ -24,7 +24,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 from fl_dataset_class import IntracranialDataset
 from torch.utils.data import DataLoader
-from torch.optim import lr_scheduler
 from datetime import date
 from sklearn import metrics
 from tqdm import tqdm

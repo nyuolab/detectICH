@@ -18,7 +18,7 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 # initialize model
 model_inf = models.model_fxn(pretrained = False, requires_grad = False).to(device)
 # load model checkpoint
-checkpoint = torch.load('../output/model.pth')
+checkpoint = torch.load('../output/model.pt')
 # load model weights state_dict
 #model_inf.load_state_dict(checkpoint['model_state_dict'])
 model_inf.load_state_dict(checkpoint['model']) # if using FL model
