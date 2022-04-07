@@ -48,7 +48,7 @@ from pt_constants import PTConstants
 
 class ICHTrainer(Executor):
 
-    def __init__(self, lr=0.0003, epochs=2, train_task_name=AppConstants.TASK_TRAIN,
+    def __init__(self, lr=0.0003, epochs=1, train_task_name=AppConstants.TASK_TRAIN,
                  submit_model_task_name=AppConstants.TASK_SUBMIT_MODEL, exclude_vars=None):
         """
         Args:
@@ -79,6 +79,8 @@ class ICHTrainer(Executor):
 
         # Point to the relevent test label data and DICOM files
         train_csv = pd.read_csv('./input/labels.csv')
+        train_csv = train_csv.sample(frac=1, random_state = 23)
+
         data_path = './input/data'
 
         self._train_dataset = IntracranialDataset(train_csv, path=data_path,train=True,test=False)
