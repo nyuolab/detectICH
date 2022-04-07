@@ -14,6 +14,7 @@ from torch.optim import lr_scheduler
 from datetime import date
 from sklearn import metrics
 runtime_day = date.today().strftime("%b-%d-%Y")
+import os
 #
 matplotlib.style.use('ggplot')
 
@@ -88,6 +89,13 @@ def plot_loss(training_loss, validation_loss, training_acc, validation_acc):
     axs[1].legend(loc='center left')
     fig.savefig(f'../output/{runtime_day}_{epochs}_b{batch_size}.png')
 
+if os.path.exists('../output'):
+    print('output path exists')
+else:
+    print("\noutput directory does not exist")
+    os.mkdir('../output/')
+    print("Directory ../output/ created\n")
+
 ## Train
 for epoch in range(epochs):
     print(f"Epoch {epoch+1} of {epochs}")
@@ -108,6 +116,7 @@ for epoch in range(epochs):
 
     train_accuracy.append(train_acc)
     valid_accuracy.append(val_acc)
+    
     # Print epoch results
     epoch_lr = optimizer.param_groups[0]["lr"]
     learning_rate.append(epoch_lr)
@@ -119,18 +128,15 @@ for epoch in range(epochs):
     print('------------------\n')
     #
     plot_loss(train_loss, valid_loss, train_acc, val_acc)
+    epoch_metrics = pd.DataFrame(data = {'epoch':list(range(1,epochs+1)),'learning_rate':learning_rate, 'train_loss': train_loss, 'train_accuracy': train_accuracy, 'valid_loss':valid_loss, 'valid_accuracy':valid_accuracy})
+    epoch_metrics.to_csv(f'../output/{runtime_day}_epoch_metrics.csv', index = False)
+    # Save trained model to disk
+    torch.save({
+        'epoch': epochs,
+        'model_state_dict': model.state_dict(),
+        'optimizer_state_dict': optimizer.state_dict(),
+        'loss': criterion,
+    }, f'../output/{epoch}_model.pt')
     torch.cuda.empty_cache()
 
-##
-epoch_metrics = pd.DataFrame(data = {'epoch':list(range(1,epochs+1)),'learning_rate':learning_rate, 'train_loss': train_loss, 'train_accuracy': train_accuracy, 'valid_loss':valid_loss, 'valid_accuracy':valid_accuracy})
-epoch_metrics.to_csv(f'../output/{runtime_day}_epoch_metrics.csv', index = False)
-
-# Save trained model to disk
-torch.save({
-    'epoch': epochs,
-    'model_state_dict': model.state_dict(),
-    'optimizer_state_dict': optimizer.state_dict(),
-    'loss': criterion,
-}, f'../output/{epoch}_model.pt')
-
-
+#fin

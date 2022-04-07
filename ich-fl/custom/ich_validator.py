@@ -132,20 +132,26 @@ class ICHValidator(Executor):
         metrics_output = {}
 
         for i in range(len(label_list)):
-            
+            print(f'subtype: {label_list[i]}')
             subtype_labels=np.array(running_labels[:, i]).flatten()
             subtype_outputs=np.array(running_outputs[:, i]).flatten()
-            print(subtype_labels)
-            print(subtype_outputs)
 
-            #
+            # Calculate ROC AUC for subtype
+            print(f'\nROC_auc for subtype {label_list[i]}... ')
             fpr, tpr, _ = metrics.roc_curve(subtype_labels, subtype_outputs)
             roc_auc = metrics.auc(fpr, tpr)
-            #
+            print(roc_auc)
+            # Caclulate PRC AUC for subtype
+            print(f'\nPRC_auc for subtype {label_list[i]}... ')
             precision, recall, thresholds = metrics.precision_recall_curve(subtype_labels, subtype_outputs)
             prc_auc = metrics.auc(recall, precision)
-
-            acc = metrics.accuracy_score(subtype_labels, subtype_outputs)
+            print(prc_auc)
+            # Calculate accuracy using threshold for binary
+            bin_threshold = 0.4
+            print(f'\nAccuracy for subtype {label_list[i]} with bin_thresh = {bin_threshold}... ')
+            bin_output = np.where(subtype_outputs > bin_threshold, 1, 0)
+            acc = metrics.accuracy_score(subtype_labels, bin_output)
+            print(acc)
             #bin_output = np.where(output.cpu() > 0.5, 1, 0)
             #_, pred_label = torch.max(output, 1)
             #print(f"pred_label: {pred_label}")
