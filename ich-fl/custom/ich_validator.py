@@ -52,6 +52,8 @@ class ICHValidator(Executor):
         
         # Point to the relevent test label data and DICOM files
         train_csv = pd.read_csv('./input/labels.csv')
+        train_csv = train_csv.sample(frac=1, random_state=23)
+
         data_path = './input/data'
         self.test_data = IntracranialDataset(train_csv, path=data_path, train=False, test=False)
         self.test_loader = DataLoader(self.test_data, batch_size=8, shuffle=False)
@@ -123,7 +125,10 @@ class ICHValidator(Executor):
                     running_labels=torch.cat((running_labels, labels.cpu()))
                     running_outputs=torch.cat((running_outputs, outputs.cpu()))
 
-
+        print('\n+++++++++++++\n')
+        print(f'\nvalidation ste running_labels: {running_labels}')
+        print(f'validation ste running_outputs: {running_labels}\n')
+        print('\n++++++++\n')
         metrics_output = {}
 
         for i in range(len(label_list)):

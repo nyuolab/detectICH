@@ -79,7 +79,7 @@ class ICHTrainer(Executor):
 
         # Point to the relevent test label data and DICOM files
         train_csv = pd.read_csv('./input/labels.csv')
-        train_csv = train_csv.sample(frac=1, random_state = 23)
+        train_csv = train_csv.sample(frac=1, random_state=23)
 
         data_path = './input/data'
 
