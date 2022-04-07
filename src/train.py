@@ -41,7 +41,9 @@ valid_data = IntracranialDataset(
 
 ## Learning parameters
 lr = 0.0003
-epochs = 40
+epochs = 5
+
+
 batch_size = 16
 optimizer = optim.Adam(model.parameters(), lr=lr)
 #scheduler = lr_scheduler.StepLR(optimizer, step_size=3, gamma=0.1)

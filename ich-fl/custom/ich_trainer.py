@@ -48,7 +48,7 @@ from pt_constants import PTConstants
 
 class ICHTrainer(Executor):
 
-    def __init__(self, lr=0.0003, epochs=6, train_task_name=AppConstants.TASK_TRAIN,
+    def __init__(self, lr=0.0003, epochs=2, train_task_name=AppConstants.TASK_TRAIN,
                  submit_model_task_name=AppConstants.TASK_SUBMIT_MODEL, exclude_vars=None):
         """
         Args:
