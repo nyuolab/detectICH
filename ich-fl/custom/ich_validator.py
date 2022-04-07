@@ -88,9 +88,11 @@ class ICHValidator(Executor):
 
                 if abort_signal.triggered:
                     return make_reply(ReturnCode.TASK_ABORTED)
-
-                self.log_info(fl_ctx, f"ROC_auc, PRC_auc, and accuracy when validating {model_owner}'s model on"
+                print('\n++++++++++++++++++++')
+                self.log_info(fl_ctx, f"\n \n++++++++++++++++++++++++\n"
+                                      f"ROC_auc, PRC_auc, and accuracy when validating {model_owner}'s model on"
                                       f" {fl_ctx.get_identity_name()}"f's data: {any_results}')
+                print('++++++++++++++++++\n')
 
                 dxo = DXO(data_kind=DataKind.METRICS, data={'any': any_results, 'epidural': epidural_results, 'intraparenchymal': intraparenchymal_results,'intraventricular':intraventricular_results, 'subarachnoid':subarachnoid_results, 'subdural':subdural_results})
                 return dxo.to_shareable()
@@ -161,8 +163,5 @@ class ICHValidator(Executor):
             #print(f"f1 metric = {metric}")
 
             metrics_output[label_list[i]]=(roc_auc, prc_auc, acc)
-        print('\n++++++++++++++++++++++++++++\n')
-        print(f"\nResults of metrics (ROC_auc, PRC_auc, and acc) are: {metrics_output}")
-        print('\n++++++++++++++++++++++++++++\n')
 
         return metrics_output
