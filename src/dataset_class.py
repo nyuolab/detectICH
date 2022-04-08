@@ -35,7 +35,7 @@ class IntracranialDataset(Dataset):
       
       # read csv
       site_labels_csv = pd.read_csv(labels_path)
-      #site_labels_csv = site_labels_csv.sample(frac=1)
+      site_labels_csv = site_labels_csv.sample(frac=1)
       # Extract image names and labels
       site_image_names = site_labels_csv[:]['Image']
       site_image_paths = site_path + '/input/data/' + site_image_names + '.dcm'
@@ -87,17 +87,15 @@ class IntracranialDataset(Dataset):
 
     ## Calculate the proportion of different labels to weight the loss
     total_n_samples = np.array(self.master_labels).shape[0]
-    print(f"\ntotal samples: {total_n_samples}")
+    print(f"\nTotal samples across all sites: {total_n_samples}")
     n_per_subtype = np.sum(self.master_labels, axis = 0)
-    print(f'number samples per subtype: {n_per_subtype}')
+    print(f'Number samples per subtype: {n_per_subtype}')
 
     n_positives = n_per_subtype[0]
     n_negatives = total_n_samples - n_positives
     
     #
     self.loss_weights = torch.from_numpy(n_negatives / n_per_subtype)
-    print(f'neg:pos ratio for loss weight: {self.loss_weights}')
-
 
     if self.train == True:
       print(f'\nTotal training set contains {len(self.master_image_paths)} images')
