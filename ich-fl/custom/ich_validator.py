@@ -147,20 +147,6 @@ class ICHValidator(Executor):
             bin_output = np.where(subtype_outputs > bin_threshold, 1, 0)
             f1 = round(metrics.f1_score(subtype_labels, bin_output), 5)
             print(f'F1 score with bin_thresh of {bin_threshold}: {f1}')
-           
-            #bin_output = np.where(output.cpu() > 0.5, 1, 0)
-            #_, pred_label = torch.max(output, 1)
-            #print(f"pred_label: {pred_label}")
-            #correct += (pred_label == labels).sum().item()
-            #total += images.size()[0]
-
-            #metric = correct/float(total)
-            #flat_label = np.array([item for sublist in running_label for item in sublist])
-            #flat_output = np.array([item for sublist in running_output for item in sublist])
-            #print(flat_output)
-            
-            #metric = metrics.f1_score(flat_label, flat_output)
-            #print(f"f1 metric = {metric}")
 
             metrics_output[label_list[i]]=(roc_auc, prc_auc, f1)
 

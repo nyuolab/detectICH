@@ -35,7 +35,8 @@ class IntracranialDataset(Dataset):
       
       # read csv
       site_labels_csv = pd.read_csv(labels_path)
-      site_labels_csv = site_labels_csv.sample(frac=1)
+      site_labels_csv = site_labels_csv.sample(frac=1, random_state=23)
+
       # Extract image names and labels
       site_image_names = site_labels_csv[:]['Image']
       site_image_paths = site_path + '/input/data/' + site_image_names + '.dcm'

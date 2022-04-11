@@ -135,8 +135,9 @@ for epoch in range(epochs):
 
     ## Calculate performance metrics    
     #F1 score
-    train_acc = metrics.f1_score(flat_train_label, np.where(flat_train_pred > 0.5, 1, 0))
-    val_acc = metrics.f1_score(flat_val_label, np.where(flat_val_pred > 0.5, 1, 0))
+    bin_threshold = 0.5
+    train_acc = metrics.f1_score(flat_train_label, np.where(flat_train_pred > bin_threshold, 1, 0))
+    val_acc = metrics.f1_score(flat_val_label, np.where(flat_val_pred > bin_threshold, 1, 0))
     train_accuracy.append(train_acc) # running score
     valid_accuracy.append(val_acc) # running score
 
