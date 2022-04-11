@@ -54,7 +54,9 @@ class IntracranialDataset(Dataset):
         image_names = list(site_image_names[:train_ratio])
         #define training transforms
         self.transform = transforms.Compose([
-                                            transforms.ToTensor(),                                   
+                                            transforms.ToTensor(),
+                                            transforms.RandomHorizontalFlip(),
+                                            transforms.RandomRotation(20)                                  
         ])
 
       # Set validation data
@@ -87,15 +89,17 @@ class IntracranialDataset(Dataset):
 
     ## Calculate the proportion of different labels to weight the loss
     total_n_samples = np.array(self.master_labels).shape[0]
-    print(f"\nTotal samples across all sites: {total_n_samples}")
+    print(f"\ntotal samples: {total_n_samples}")
     n_per_subtype = np.sum(self.master_labels, axis = 0)
-    print(f'Number samples per subtype: {n_per_subtype}')
+    print(f'number samples per subtype: {n_per_subtype}')
 
     n_positives = n_per_subtype[0]
     n_negatives = total_n_samples - n_positives
     
     #
     self.loss_weights = torch.from_numpy(n_negatives / n_per_subtype)
+    print(f'neg:pos ratio for loss weight: {self.loss_weights}')
+
 
     if self.train == True:
       print(f'\nTotal training set contains {len(self.master_image_paths)} images')
@@ -150,7 +154,7 @@ def bsb_window(dcm):
     brain_img = (brain_img - 0) / 80
     subdural_img = (subdural_img - (-20)) / 200
     soft_img = (soft_img - (-150)) / 380
-    bsb_img = np.array([brain_img, subdural_img, soft_img]).transpose(1,2,0)
+    bsb_img = np.array([brain_img, subdural_img, soft_img], dtype="float32").transpose(1,2,0)
 
     return bsb_img
 
@@ -159,6 +163,7 @@ def _read(path, desired_size):
     try:
         img = bsb_window(dcm)
     except:
+        print('\nexception')
         img = np.zeros(desired_size)
     
     img = cv2.resize(img, desired_size[:2], interpolation=cv2.INTER_LINEAR)

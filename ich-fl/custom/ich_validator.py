@@ -90,7 +90,7 @@ class ICHValidator(Executor):
                     return make_reply(ReturnCode.TASK_ABORTED)
 
                 self.log_info(fl_ctx, f"\n \n++++++++++++++++++++++++\n"
-                                      f"ROC_auc, PRC_auc, and accuracy when validating {model_owner}'s model on"
+                                      f"ROC_auc, PRC_auc, and F1 score when validating {model_owner}'s model on"
                                       f" {fl_ctx.get_identity_name()}"f's data: {any_results}')
                 print('++++++++++++++++++\n')
 
@@ -142,12 +142,12 @@ class ICHValidator(Executor):
             precision, recall, thresholds = metrics.precision_recall_curve(subtype_labels, subtype_outputs)
             prc_auc = round(metrics.auc(recall, precision), 5)
             print(f'PRC_auc: {prc_auc}')
-            # Calculate accuracy using threshold for binary
+            # Calculate F1 score using threshold for binary
             bin_threshold = 0.4
             bin_output = np.where(subtype_outputs > bin_threshold, 1, 0)
-            acc = round(metrics.accuracy_score(subtype_labels, bin_output), 5)
-            print(f'Accuracy with bin_thresh of {bin_threshold}: {acc}')
-
+            f1 = round(metrics.f1_score(subtype_labels, bin_output), 5)
+            print(f'F1 score with bin_thresh of {bin_threshold}: {f1}')
+           
             #bin_output = np.where(output.cpu() > 0.5, 1, 0)
             #_, pred_label = torch.max(output, 1)
             #print(f"pred_label: {pred_label}")
@@ -162,6 +162,6 @@ class ICHValidator(Executor):
             #metric = metrics.f1_score(flat_label, flat_output)
             #print(f"f1 metric = {metric}")
 
-            metrics_output[label_list[i]]=(roc_auc, prc_auc, acc)
+            metrics_output[label_list[i]]=(roc_auc, prc_auc, f1)
 
         return metrics_output

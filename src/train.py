@@ -35,6 +35,7 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 # initialize model
 model = models.model_fxn(pretrained=True, requires_grad = False).to(device)
+model = torch.nn.DataParallel(model).to(device)
 # ResNext101 is 340 Mb
 
 #train dataset
@@ -95,7 +96,7 @@ def plot_loss_f1(training_loss, validation_loss, training_acc, validation_acc):
     axs[1].plot(training_acc, color = 'orange', label='train accuracy')
     axs[1].plot(validation_acc, color = 'red', label='valid accuracy')
     axs[0].set_title("Loss per Epoch")
-    axs[1].set_title("Accuracy per Epoch")
+    axs[1].set_title("F1 Score per Epoch")
     axs[0].legend(loc='center left')
     axs[1].legend(loc='center left')
     fig.savefig(f'../output/{now.strftime("%b-%d-%Y-%H-%M")}_{epochs}_b{batch_size}_loss_F1.png')
@@ -114,6 +115,7 @@ def plot_roc_prc(training_roc, validation_roc, training_prc, validation_prc):
 
 ## Train
 for epoch in range(epochs):
+    print(f"\n{datetime.now()}")
     print(f"\nEpoch {epoch+1} of {epochs}")
     train_results = train(model, train_loader, optimizer, criterion, train_data, device)
     valid_results = validate(model, valid_loader, criterion, valid_data, device)

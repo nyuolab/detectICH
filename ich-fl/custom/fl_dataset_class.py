@@ -26,8 +26,10 @@ class IntracranialDataset(Dataset):
 
       #define training transforms
       self.transform = transforms.Compose([
-                                           transforms.ToTensor(),                                   
-      ])
+                                            transforms.ToTensor(),
+                                            transforms.RandomHorizontalFlip(),
+                                            transforms.RandomRotation(20)                                  
+        ])
     # Set validation data
     elif self.train == False and self.test == False:
       print(f"Number of validation images: {self.valid_ratio}")
@@ -38,7 +40,7 @@ class IntracranialDataset(Dataset):
       self.transform = transforms.Compose([
                                            transforms.ToTensor()
       ])
-    
+
     # Set test data
     elif self.test == True and self.train == False:
       print(f"Number of test images: {len(self.all_image_names)}")
