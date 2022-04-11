@@ -50,10 +50,10 @@ valid_data = IntracranialDataset(
 
 ## Learning parameters
 lr = 0.0003
-epochs = 3
+epochs = 8
 
 
-batch_size = 32
+batch_size = 64
 optimizer = optim.Adam(model.parameters(), lr=lr)
 #scheduler = lr_scheduler.StepLR(optimizer, step_size=3, gamma=0.1)
 
@@ -119,7 +119,8 @@ for epoch in range(epochs):
     print(f"\nEpoch {epoch+1} of {epochs}")
     train_results = train(model, train_loader, optimizer, criterion, train_data, device)
     valid_results = validate(model, valid_loader, criterion, valid_data, device)
- 
+    if epoch == 0:
+        best_val_loss = valid_results['val_loss']
 
     #Save values for output
     train_loss.append(train_results['train_loss'])
@@ -142,16 +143,16 @@ for epoch in range(epochs):
     # ROC AUC
     train_fpr, train_tpr, _ = metrics.roc_curve(flat_train_label, flat_train_pred)
     val_fpr, val_tpr, _ = metrics.roc_curve(flat_val_label, flat_val_pred)
-    train_roc_auc = round(metrics.auc(train_fpr, train_tpr), 5)
-    val_roc_auc = round(metrics.auc(val_fpr, val_tpr), 5)
+    train_roc_auc = round(metrics.auc(train_fpr, train_tpr), 6)
+    val_roc_auc = round(metrics.auc(val_fpr, val_tpr), 6)
     running_train_roc.append(train_roc_auc)
     running_val_roc.append(val_roc_auc)
 
     # Caclulate PRC AUC
     train_precision, train_recall, train_thresholds = metrics.precision_recall_curve(flat_train_label, flat_train_pred)
-    train_prc_auc = round(metrics.auc(train_recall, train_precision), 5)
+    train_prc_auc = round(metrics.auc(train_recall, train_precision), 6)
     val_precision, val_recall, val_thresholds = metrics.precision_recall_curve(flat_val_label, flat_val_pred)
-    val_prc_auc = round(metrics.auc(val_recall, val_precision), 5)
+    val_prc_auc = round(metrics.auc(val_recall, val_precision), 6)
     running_train_prc.append(train_prc_auc)
     running_val_prc.append(val_prc_auc)
  
@@ -169,7 +170,7 @@ for epoch in range(epochs):
 
     print(f'Training PRC_auc: {train_prc_auc}')
     print(f'Validation PRC_auc: {val_prc_auc}\n')
-    print('\n------------------\n')
+
 
     #Plot and save figures on performance metrics over each epoch
     plot_loss_f1(train_loss, valid_loss, train_accuracy, valid_accuracy)
@@ -183,14 +184,31 @@ for epoch in range(epochs):
                                         'train_prc_auc':running_train_prc, 'val_prc_auc': running_val_prc})
     epoch_metrics.to_csv(f'../output/{now.strftime("%b-%d-%Y")}_epoch_metrics.csv', index = False)
 
-    # Save trained model to disk
+    # Always save current model to disk
     torch.save({
-        'epoch': epoch,
-        'model_state_dict': model.state_dict(),
-        'optimizer_state_dict': optimizer.state_dict(),
-        'loss': criterion,
-    }, f'../output/{epoch}_model.pt')
+            'epoch': epoch,
+            'model_state_dict': model.state_dict(),
+            'optimizer_state_dict': optimizer.state_dict(),
+            'loss': criterion,
+        }, f'../output/model.pt')
+    # Save best model
+    if epoch == 0:
+        torch.save({
+            'epoch': epoch,
+            'model_state_dict': model.state_dict(),
+            'optimizer_state_dict': optimizer.state_dict(),
+            'loss': criterion,
+        }, f'../output/best_model.pt')
+    elif valid_results['val_loss'] < best_val_loss:
+        best_val_loss = valid_results['val_loss']
+        print(f'saving new best model (from epoch {epoch + 1}) with current loss {valid_results["val_loss"]}...')
+        torch.save({
+            'epoch': epoch,
+            'model_state_dict': model.state_dict(),
+            'optimizer_state_dict': optimizer.state_dict(),
+            'loss': criterion,
+        }, f'../output/best_model.pt')
     torch.cuda.empty_cache()
-
+    print('\n------------------\n')
 sys.stdout.close()
 #fin
