@@ -15,7 +15,8 @@ class IntracranialDataset(Dataset):
     self.img_size = img_size
     self.all_image_names = self.csv[:]['Image']
     self.all_labels = np.array(self.csv.drop(['Image', 'all_diagnoses'], axis=1))
-    self.train_ratio = int(0.85 * len(self.csv))
+    self.ratio_of_data_to_train = 0.25
+    self.train_ratio = int(self.ratio_of_data_to_train * len(self.csv))
     self.valid_ratio = len(self.csv) - self.train_ratio
 
     # Set training data images and labels

@@ -43,7 +43,8 @@ class IntracranialDataset(Dataset):
       site_labels = np.array(site_labels_csv.drop(['Image', 'all_diagnoses'], axis = 1))
 
       # Define index range for training and validation images
-      train_ratio = int(0.85 * len(site_labels_csv))
+      ratio_of_data_to_train = 0.25
+      train_ratio = int(ratio_of_data_to_train * len(site_labels_csv))
       valid_ratio = len(site_labels_csv) - train_ratio
 
       # Split up data based on training or validation

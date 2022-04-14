@@ -50,7 +50,7 @@ valid_data = IntracranialDataset(
 
 ## Learning parameters
 lr = 0.0003
-epochs = 8
+epochs = 2
 
 
 batch_size = 64
@@ -117,6 +117,8 @@ def plot_roc_prc(training_roc, validation_roc, training_prc, validation_prc):
 for epoch in range(epochs):
     print(f"\n{datetime.now()}")
     print(f"\nEpoch {epoch+1} of {epochs}")
+
+    # Actual training and validation
     train_results = train(model, train_loader, optimizer, criterion, train_data, device)
     valid_results = validate(model, valid_loader, criterion, valid_data, device)
     if epoch == 0:
@@ -126,7 +128,7 @@ for epoch in range(epochs):
     train_loss.append(train_results['train_loss'])
     valid_loss.append(valid_results['val_loss'])
 
-    ## Calculate accuracy (correct label for any of the 6 subclasses)
+    # Flatten labels and predictions for
     flat_train_pred = np.array([item for sublist in train_results['pred'] for item in sublist])
     flat_train_label = np.array([item for sublist in train_results['label'] for item in sublist])
     
@@ -209,6 +211,7 @@ for epoch in range(epochs):
             'optimizer_state_dict': optimizer.state_dict(),
             'loss': criterion,
         }, f'../output/best_model.pt')
+
     torch.cuda.empty_cache()
     print('\n------------------\n')
 sys.stdout.close()

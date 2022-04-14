@@ -136,16 +136,19 @@ class ICHValidator(Executor):
 
             # Calculate ROC AUC for subtype
             fpr, tpr, _ = metrics.roc_curve(subtype_labels, subtype_outputs)
-            roc_auc = round(metrics.auc(fpr, tpr), 5)
+            roc_auc = round(metrics.auc(fpr, tpr), 6)
             print(f'ROC_auc: {roc_auc}')
             # Caclulate PRC AUC for subtype
             precision, recall, thresholds = metrics.precision_recall_curve(subtype_labels, subtype_outputs)
-            prc_auc = round(metrics.auc(recall, precision), 5)
+            prc_auc = round(metrics.auc(recall, precision), 6)
             print(f'PRC_auc: {prc_auc}')
-            # Calculate F1 score using threshold for binary
+            # Binarize predictions
             bin_threshold = 0.4
             bin_output = np.where(subtype_outputs > bin_threshold, 1, 0)
-            f1 = round(metrics.f1_score(subtype_labels, bin_output), 5)
+            # Calculate accuracy score using threshold for binary
+            acc = round(metrics.accuracy_score(subtype_labels, bin_output), 6)
+            # Calculate F1 score using threshold for binary
+            f1 = round(metrics.f1_score(subtype_labels, bin_output), 6)
             print(f'F1 score with bin_thresh of {bin_threshold}: {f1}')
 
             metrics_output[label_list[i]]=(roc_auc, prc_auc, f1)

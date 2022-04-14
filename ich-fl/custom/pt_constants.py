@@ -19,3 +19,5 @@ class PTConstants:
 
     PTModelsDir = "models"
     CrossValResultsJsonFilename = "cross_val_results.json"
+    OutputMetricsDir = "output"
+    

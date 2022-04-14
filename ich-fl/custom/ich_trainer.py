@@ -12,7 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import enum
 import os.path
+from random import shuffle
+from ssl import AlertDescription
 import torch
 from torch import nn
 from torch.optim import Adam
@@ -44,6 +47,7 @@ from nvflare.app_common.abstract.model import make_model_learnable, model_learna
 from nvflare.app_common.app_constant import AppConstants
 from nvflare.app_common.pt.pt_fed_utils import PTModelPersistenceFormatManager
 from pt_constants import PTConstants
+import matplotlib.pyplot as plt
 
 
 class ICHTrainer(Executor):
@@ -86,6 +90,11 @@ class ICHTrainer(Executor):
         self._train_dataset = IntracranialDataset(train_csv, path=data_path,train=True,test=False)
         self._train_loader = DataLoader(self._train_dataset, batch_size=batch_size, shuffle=True)
         self._n_iterations = len(self._train_loader)
+
+        # Run validation
+        self._val_dataset = IntracranialDataset(train_csv, path=data_path, train=False, test=False)
+        self._val_loader = DataLoader(self._val_dataset, batch_size=batch_size, shuffle=False)
+
         # Define weighted loss for imabalanced dataset
         loss_weights = self._train_dataset.loss_weights.to(self.device)
         print(f'\nloss weights: {loss_weights}\n')
@@ -100,37 +109,195 @@ class ICHTrainer(Executor):
             data=self.model.state_dict(), default_train_conf=self._default_train_conf)
 
     def local_train(self, fl_ctx, weights, abort_signal):
-        print('training...')
+        print('\ntraining...\n')
         # Set the model weights
         self.model.load_state_dict(state_dict=weights)
-
         # Basic training
         self.model.train()
+
+        # Initialize variables to output
+        running_train_loss = []
+        running_val_loss = []
+        running_train_acc = []
+        running_val_acc = []
+        running_train_f1 = []
+        running_val_f1 = []
+        running_train_roc = []
+        running_val_roc = []
+        running_train_prc = []
+        running_val_prc = []
+        #
+        local_output_dir = self.create_output_dir(fl_ctx)
         for epoch in range(self._epochs):
             print(f'Epoch {epoch+1} of {self._epochs}')
-            running_loss = 0.0
+            # running_loss = 0.0
+            
+            train_running_batch_loss = 0.0
+            train_epoch_preds = []
+            train_epoch_labels = []
+            counter = 0
             for i, batch in tqdm(enumerate(self._train_loader),total=int(len(self._train_dataset)/self._train_loader.batch_size)):
+                counter += 1
                 if abort_signal.triggered:
                     # If abort_signal is triggered, we simply return.
                     # The outside function will check it again and decide steps to take.
                     return
 
+                # Read in images and labels from batch for training
                 images, labels = batch['image'].to(self.device), batch['label'].to(self.device)
                 self.optimizer.zero_grad()
                 predictions = self.model(images)
                 cost = self.loss(predictions, labels)
                 cost.backward()
                 self.optimizer.step()
+                sigmoid_preds = torch.sigmoid(predictions)
 
-                running_loss += (cost.cpu().detach().numpy()/images.size()[0])
-                if i % 3000 == 0:
-                    self.log_info(fl_ctx, f"Epoch: {epoch}/{self._epochs}, Iteration: {i}, "
-                                          f"Loss: {running_loss/3000}")
-                    running_loss = 0.0
-            #self.scheduler.step()
+                # Add results (loss, predictions, labels) per batch to running lists
+                train_running_batch_loss += cost.item()
+                train_epoch_labels += labels.tolist()
+                train_epoch_preds += sigmoid_preds.tolist()
+
+                # running_loss += (cost.cpu().detach().numpy()/images.size()[0])
+                # if i % 3000 == 0:
+                #     self.log_info(fl_ctx, f"Epoch: {epoch}/{self._epochs}, Iteration: {i}, "
+                #                           f"Loss: {running_loss/3000}")
+                #     running_loss = 0.0
+
+            # Divide total loss added by num_batches
+            train_epoch_loss = train_running_batch_loss / counter
+
+            # Validate updated model for this epoch
+            local_val_results = self.local_val(fl_ctx, abort_signal)
+
+            # Flatten the results
+            # Flatten labels and predictions for
+            flat_train_pred = np.array([item for sublist in train_epoch_preds for item in sublist])
+            flat_train_label = np.array([item for sublist in train_epoch_labels for item in sublist])
+            
+            flat_val_pred = np.array([item for sublist in local_val_results['preds'] for item in sublist])
+            flat_val_label = np.array([item for sublist in local_val_results['labels'] for item in sublist])
+
+            # Calculate metrics, run
+            # Determine threshold to binarize outputs for accuracy/F1 score
+            bin_threshold = 0.4
+            #
+            train_acc = metrics.accuracy_score(flat_train_label, np.where(flat_train_pred > bin_threshold, 1, 0))
+            val_acc = metrics.accuracy_score(flat_val_label, np.where(flat_val_pred > bin_threshold, 1, 0))
+            #
+            train_f1 = metrics.f1_score(flat_train_label, np.where(flat_train_pred > bin_threshold, 1, 0))
+            val_f1 = metrics.f1_score(flat_val_label, np.where(flat_val_pred > bin_threshold, 1, 0))
+            # ROC AUC
+            train_fpr, train_tpr, _ = metrics.roc_curve(flat_train_label, flat_train_pred)
+            val_fpr, val_tpr, _ = metrics.roc_curve(flat_val_label, flat_val_pred)
+            train_roc_auc = round(metrics.auc(train_fpr, train_tpr), 6)
+            val_roc_auc = round(metrics.auc(val_fpr, val_tpr), 6)
+
+             # Caclulate PRC AUC
+            train_precision, train_recall, train_thresholds = metrics.precision_recall_curve(flat_train_label, flat_train_pred)
+            train_prc_auc = round(metrics.auc(train_recall, train_precision), 6)
+            val_precision, val_recall, val_thresholds = metrics.precision_recall_curve(flat_val_label, flat_val_pred)
+            val_prc_auc = round(metrics.auc(val_recall, val_precision), 6)
+            
+            print("\n++++++++++++++++++++++++")
+            print(f'training accuracy: {train_acc}')
+            print(f'validation accuracy: {val_acc}')
+
+            # Append results from this epoch to running list
+            running_train_loss.append(train_epoch_loss)
+            running_val_loss.append(local_val_results["val_loss"])
+
+            running_train_acc.append(train_acc)
+            running_val_acc.append(val_acc)
+
+            running_train_f1.append(train_f1)
+            running_val_f1.append(val_f1)
+
+            running_train_roc.append(train_roc_auc)
+            running_val_roc.append(val_roc_auc)
+
+            running_train_prc.append(train_prc_auc)
+            running_val_prc.append(val_prc_auc)
+            print(f'\nEpoch {epoch+1}:')
+            print(f'Train Loss: {train_epoch_loss:.4f}')
+            print(f'Val Loss: {local_val_results["val_loss"]:.4f}\n')
+            
+            print(f'Training accuracy = {train_acc:.5f}')
+            print(f'Validation accuracy = {val_acc:.5f}\n')
+
+            print(f'Training F1 score = {train_f1:.5f}')
+            print(f'Validation F1 score = {val_f1:.5f}\n')
+
+            print(f'Training ROC_auc: {train_roc_auc}')
+            print(f'Validation ROC_auc: {val_roc_auc}\n')
+
+            print(f'Training PRC_auc: {train_prc_auc}')
+            print(f'Validation PRC_auc: {val_prc_auc}\n')
+
+            # Plot metrics
+            self.plot_metrics(fl_ctx, local_output_dir, running_train_loss, running_val_loss, 'Loss_per_epoch')
+            self.plot_metrics(fl_ctx, local_output_dir, running_train_acc, running_val_acc, 'Accuracy_per_epoch')
+            self.plot_metrics(fl_ctx, local_output_dir, running_train_f1, running_val_f1, 'F1_per_epoch')
+            self.plot_metrics(fl_ctx, local_output_dir, running_train_roc, running_val_roc, 'ROC_auc_per_epoch')
+            self.plot_metrics(fl_ctx, local_output_dir, running_train_prc, running_val_prc, 'Precision-Recall_auc_per_epoch')
+
+            ## Save metrics to csv 
+            print(f'saving to {local_output_dir}/epoch_metrics.csv')
+            epoch_metrics = pd.DataFrame(data = {'epoch':list(range(epoch + 1)),
+                                        'train_loss': running_train_loss, 'train_f1': running_train_f1,
+                                        'valid_loss':running_val_loss, 'valid_f1':running_val_f1,
+                                        'train_roc_auc': running_train_roc, 'val_roc_auc':running_val_roc,
+                                        'train_prc_auc':running_train_prc, 'val_prc_auc': running_val_prc})
+            
+            epoch_metrics.to_csv(f'{local_output_dir}/epoch_metrics.csv', index = False)
+    
+    def local_val(self, fl_ctx, abort_signal):
+        print('\nvalidating...\n')
+        self.model.eval()
+        val_running_loss = 0.0
+        val_running_preds = []
+        val_running_labels = []
+        counter = 0
+        with torch.no_grad():
+            for i, batch, in tqdm(enumerate(self._val_loader), total=int(len(self._val_dataset)/self._val_loader.batch_size)):
+                if abort_signal.triggered:
+                    return
+                counter += 1
+                images, labels = batch['image'].to(self.device), batch['label'].to(self.device)
+                predictions = self.model(images)
+                cost = self.loss(predictions,labels)
+                sigmoid_preds = torch.sigmoid(predictions)
+                val_running_loss += cost.item()
+                val_running_labels += labels.tolist()
+                val_running_preds += sigmoid_preds.tolist()
+
+            val_loss = val_running_loss / counter
+        return {'val_loss':val_loss, 'preds':val_running_preds, 'labels':val_running_labels}
+
+
+    def plot_metrics(self, fl_ctx, output_dir, train_data, val_data, title_string):
+        # Plot
+        fig, axs = plt.subplots(figsize = (10,7))
+        axs.plot(train_data, color = 'orange', label='train results')
+        axs.plot(val_data, color = 'red', label='validation results')
+        axs.set_title(f"{title_string}")
+        axs.legend(loc='center left')
+        print(f"plotting {title_string}...")
+        #run_dir = fl_ctx.get_engine().get_workspace().get_run_dir(fl_ctx.get_prop(ReservedKey.RUN_NUM))
+        #local_output_dir = os.path.join(run_dir, PTConstants.OutputMetricsDir)
+        fig.savefig(f'{output_dir}/{title_string}.png')
+        return
+
+    #def calculate_metrics():
+        # F1
+        # Acc
+        # ROC AUC
+        # PRC AUC
+    #    return
+
 
     def execute(self, task_name: str, shareable: Shareable, fl_ctx: FLContext, abort_signal: Signal) -> Shareable:
         try:
+
             if task_name == self._train_task_name:
                 # Get model weights
                 try:
@@ -175,6 +342,26 @@ class ICHTrainer(Executor):
         except:
             self.log_exception(fl_ctx, f"Exception in simple trainer.")
             return make_reply(ReturnCode.EXECUTION_EXCEPTION)
+
+
+    def create_output_dir(self, fl_ctx: FLContext):
+        # Make directory named "output" in current run_# folder
+        # Get run number dir path
+        run_dir = fl_ctx.get_engine().get_workspace().get_run_dir(fl_ctx.get_prop(ReservedKey.RUN_NUM))
+        output_dir = os.path.join(run_dir, PTConstants.OutputMetricsDir)
+        # make output folder
+        if not os.path.exists(output_dir):
+            os.makedirs(output_dir)
+        round_int = 1
+        round_output_dir = os.path.join(run_dir, PTConstants.OutputMetricsDir, f"round_{round_int}")
+        while os.path.exists(round_output_dir):
+            round_int += 1
+            round_output_dir = os.path.join(run_dir, PTConstants.OutputMetricsDir, f"round_{round_int}")
+        os.makedirs(round_output_dir)
+        print('\ncreating output dir...')
+        print(round_output_dir)
+        return round_output_dir
+
 
     def save_local_model(self, fl_ctx: FLContext):
         run_dir = fl_ctx.get_engine().get_workspace().get_run_dir(fl_ctx.get_prop(ReservedKey.RUN_NUM))
