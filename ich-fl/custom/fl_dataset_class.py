@@ -6,6 +6,11 @@ from torch.utils.data import Dataset
 import pydicom
 import os
 
+"""
+This defines the Dataset class for training and validation. It includes pre-processing of 
+DICOM images by windowing and stacking the CT scans.
+"""
+
 class IntracranialDataset(Dataset):
   def __init__(self, csv_file, path, train, test, img_size=(512,512,1)):
     self.csv = csv_file
@@ -15,7 +20,7 @@ class IntracranialDataset(Dataset):
     self.img_size = img_size
     self.all_image_names = self.csv[:]['Image']
     self.all_labels = np.array(self.csv.drop(['Image', 'all_diagnoses'], axis=1))
-    self.ratio_of_data_to_train = 0.25
+    self.ratio_of_data_to_train = 0.85
     self.train_ratio = int(self.ratio_of_data_to_train * len(self.csv))
     self.valid_ratio = len(self.csv) - self.train_ratio
 
@@ -51,7 +56,7 @@ class IntracranialDataset(Dataset):
                                            transforms.ToTensor()
       ])
 
-    ## Calculate the proportion of different labels to weight the loss
+    ## Calculate the proportion of different labels to weight the loss for imbalanced dataset
     total_n_samples = np.array(self.labels).shape[0]
     print(f"\ntotal samples: {total_n_samples}")
     n_per_subtype = np.sum(self.labels, axis = 0)
@@ -88,8 +93,13 @@ def correct_dcm(dcm):
     dcm.RescaleIntercept = -1000
     return(dcm)
 
+
 def window_image(dcm, window_center, window_width):
-    
+  """
+  window_image() "windows" each dicom CT scan by varying the contrast, similar to the workflow of a radiologist.
+  Thanks to https://github.com/appian42/kaggle-rsna-intracranial-hemorrhage/blob/master/src/utils/misc.py and 
+  https://www.kaggle.com/code/dcstang/see-like-a-radiologist-with-systematic-windowing for inspiration.
+  """
     if (dcm.BitsStored == 12) and (dcm.PixelRepresentation == 0) and (int(dcm.RescaleIntercept) > -100):
         correct_dcm(dcm)
     
@@ -101,6 +111,9 @@ def window_image(dcm, window_center, window_width):
     return img
 
 def bsb_window(dcm):
+  """
+  This stacks the windowed scans into an RGB image.
+  """
     brain_img = window_image(dcm, 40, 80)
     subdural_img = window_image(dcm, 80, 200)
     soft_img = window_image(dcm, 40, 380)

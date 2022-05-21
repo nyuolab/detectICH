@@ -23,7 +23,11 @@ else:
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 # initialize model
 model_inf = models.model_fxn(pretrained = False, requires_grad = False).to(device)
+
+
+#
 model_inf = torch.nn.DataParallel(model_inf).to(device)
+
 
 # load model checkpoint
 checkpoint = torch.load('../output/model.pt')
@@ -41,7 +45,8 @@ test_data = IntracranialDataset(path=data_path, train=False, test=True)
 test_loader = DataLoader(
     test_data,
     batch_size = 512,
-    shuffle=False
+    shuffle=False,
+    num_workers=8
 )
 
 samples = []

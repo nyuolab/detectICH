@@ -12,6 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""
+This is the training script for federated learning. It uses the nvflare Executor and Shareable classes
+to distribute the model and initiate training at each site. 
+"""
+
 import enum
 import os.path
 from random import shuffle
@@ -19,23 +24,15 @@ from ssl import AlertDescription
 import torch
 from torch import nn
 from torch.optim import Adam
-from torch.utils.data.dataloader import DataLoader
-from torchvision.datasets import CIFAR10
 from torchvision.transforms import ToTensor, Normalize, Compose
 from torchvision import models as tvmodels
-# From train.py --probably can trim this down
-import torch
-import torch.nn as nn
-import torch.optim as optim
 import pandas as pd
 import numpy as np
 from fl_dataset_class import IntracranialDataset
 from torch.utils.data import DataLoader
-from torch.optim import lr_scheduler
 from datetime import date
 from sklearn import metrics
 from tqdm import tqdm
-
 #
 from nvflare.apis.dxo import from_shareable, DXO, DataKind, MetaKey
 from nvflare.apis.executor import Executor
@@ -52,12 +49,12 @@ import matplotlib.pyplot as plt
 
 class ICHTrainer(Executor):
 
-    def __init__(self, lr=0.0003, epochs=2, train_task_name=AppConstants.TASK_TRAIN,
+    def __init__(self, lr=0.0003, epochs=3, train_task_name=AppConstants.TASK_TRAIN,
                  submit_model_task_name=AppConstants.TASK_SUBMIT_MODEL, exclude_vars=None):
         """
         Args:
-            lr (float, optional): Learning rate. Defaults to 0.01
-            epochs (int, optional): Epochs. Defaults to 5
+            lr (float, optional): Learning rate.
+            epochs (int, optional): Epochs for local training.
             train_task_name (str, optional): Task name for train task. Defaults to "train".
             submit_model_task_name (str, optional): Task name for submit model. Defaults to "submit_model".
             exclude_vars (list): List of variables to exclude during model loading.
@@ -71,17 +68,26 @@ class ICHTrainer(Executor):
         self._submit_model_task_name = submit_model_task_name
         self._exclude_vars = exclude_vars
 
-        # Training setup
+        # Define the model
         self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
         self.model = tvmodels.resnext101_32x8d(pretrained=True, progress=True)
-        self.model.fc = nn.Linear(2048,6)
+
+        # Set parameters for torchvision model
+        requires_grad = False
+        if requires_grad == False:
+            for param in self.model.parameters():
+                param.requires_grad = False
+        # to train the hidden layers
+        elif self.requires_grad == True:
+            for param in self.model.parameters():
+                param.requires_grad = True
+
+        self.model.fc = nn.Linear(2048,6) # Final fully connected layer with 6 classes for bleed subtypes
         self.model.to(self.device)
         self.optimizer = Adam(self.model.parameters(), lr=lr)
         batch_size = 16
-        #self.scheduler = lr_scheduler.StepLR(self.optimizer, step_size = 3, gamma=0.1)
 
-
-        # Point to the relevent test label data and DICOM files
+        # Point to the relevent test label data and DICOM files. Relative path defaults to client folder.
         train_csv = pd.read_csv('./input/labels.csv')
         train_csv = train_csv.sample(frac=1, random_state=23)
 
@@ -115,7 +121,7 @@ class ICHTrainer(Executor):
         # Basic training
         self.model.train()
 
-        # Initialize variables to output
+        # Initialize variables to output. This is optional but allows clients to monitor the progress of training after each epoch.
         running_train_loss = []
         running_val_loss = []
         running_train_acc = []
@@ -128,6 +134,8 @@ class ICHTrainer(Executor):
         running_val_prc = []
         #
         local_output_dir = self.create_output_dir(fl_ctx)
+
+        # 
         for epoch in range(self._epochs):
             print(f'Epoch {epoch+1} of {self._epochs}')
             # running_loss = 0.0
@@ -157,12 +165,6 @@ class ICHTrainer(Executor):
                 train_epoch_labels += labels.tolist()
                 train_epoch_preds += sigmoid_preds.tolist()
 
-                # running_loss += (cost.cpu().detach().numpy()/images.size()[0])
-                # if i % 3000 == 0:
-                #     self.log_info(fl_ctx, f"Epoch: {epoch}/{self._epochs}, Iteration: {i}, "
-                #                           f"Loss: {running_loss/3000}")
-                #     running_loss = 0.0
-
             # Divide total loss added by num_batches
             train_epoch_loss = train_running_batch_loss / counter
 
@@ -191,7 +193,6 @@ class ICHTrainer(Executor):
             val_fpr, val_tpr, _ = metrics.roc_curve(flat_val_label, flat_val_pred)
             train_roc_auc = round(metrics.auc(train_fpr, train_tpr), 6)
             val_roc_auc = round(metrics.auc(val_fpr, val_tpr), 6)
-
              # Caclulate PRC AUC
             train_precision, train_recall, train_thresholds = metrics.precision_recall_curve(flat_train_label, flat_train_pred)
             train_prc_auc = round(metrics.auc(train_recall, train_precision), 6)
@@ -282,18 +283,8 @@ class ICHTrainer(Executor):
         axs.set_title(f"{title_string}")
         axs.legend(loc='center left')
         print(f"plotting {title_string}...")
-        #run_dir = fl_ctx.get_engine().get_workspace().get_run_dir(fl_ctx.get_prop(ReservedKey.RUN_NUM))
-        #local_output_dir = os.path.join(run_dir, PTConstants.OutputMetricsDir)
         fig.savefig(f'{output_dir}/{title_string}.png')
         return
-
-    #def calculate_metrics():
-        # F1
-        # Acc
-        # ROC AUC
-        # PRC AUC
-    #    return
-
 
     def execute(self, task_name: str, shareable: Shareable, fl_ctx: FLContext, abort_signal: Signal) -> Shareable:
         try:

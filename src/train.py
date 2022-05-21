@@ -62,6 +62,17 @@ loss_weights=train_data.loss_weights.to(device)
 print(f'\nBCE Loss weights: {loss_weights}')
 criterion = nn.BCEWithLogitsLoss(pos_weight=loss_weights)
 
+# Run from checkpoint
+run_checkpoint = False
+if run_checkpoint:
+    checkpoint = torch.load('../output/model.pt')
+    model.load_state_dict(checkpoint['model_state_dict'])
+    optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+    checkpoint_epoch = checkpoint['epoch']
+    loss = checkpoint['loss']
+else:
+    checkpoint_epoch = 0
+
 
 #train data loader
 train_loader = DataLoader(
@@ -114,14 +125,16 @@ def plot_roc_prc(training_roc, validation_roc, training_prc, validation_prc):
     fig.savefig(f'../output/{now.strftime("%b-%d-%Y-%H-%M")}_{epochs}_b{batch_size}_ROCPRC.png')
 
 ## Train
-for epoch in range(epochs):
+for epoch in range(checkpoint_epoch, epochs, 1):
     print(f"\n{datetime.now()}")
     print(f"\nEpoch {epoch+1} of {epochs}")
 
     # Actual training and validation
     train_results = train(model, train_loader, optimizer, criterion, train_data, device)
     valid_results = validate(model, valid_loader, criterion, valid_data, device)
-    if epoch == 0:
+
+    # initialize
+    if epoch == 0 or epoch == checkpoint_epoch:
         best_val_loss = valid_results['val_loss']
 
     #Save values for output

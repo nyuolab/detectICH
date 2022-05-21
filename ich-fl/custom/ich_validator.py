@@ -12,22 +12,25 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""
+ich_validator.py uses the Executor and Shareable classes of nvflare to 
+run cross-site validation, which validates all local models and the global FL model
+on data from each site. The results of cross-site validation will be saved as a .json
+file in the FL server for comparison.
+"""
+
 import torch
 from torch.utils.data import DataLoader
 from torchvision.transforms import Compose, ToTensor, Normalize
 import os
-
 import torch.nn as nn
 import torch.optim as optim
 import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
 from fl_dataset_class import IntracranialDataset
-from torch.utils.data import DataLoader
-from datetime import date
 from sklearn import metrics
 from tqdm import tqdm
-#
 from nvflare.apis.dxo import from_shareable, DataKind, DXO
 from nvflare.apis.executor import Executor
 from nvflare.apis.fl_constant import ReturnCode
@@ -77,7 +80,7 @@ class ICHValidator(Executor):
                 model_owner = shareable.get_header(AppConstants.MODEL_OWNER, "?")
                 weights = {k: torch.as_tensor(v, device=self.device) for k, v in dxo.data.items()}
 
-                # Get validation accuracy
+                # Get validation accuracy for each hemorrhage subtype
                 validation_results = self.do_validation(weights, abort_signal)
                 any_results = validation_results['any']
                 epidural_results = validation_results['epidural']
@@ -103,6 +106,10 @@ class ICHValidator(Executor):
             return make_reply(ReturnCode.TASK_UNKNOWN)
 
     def do_validation(self, weights, abort_signal):
+        """
+        do_validation() is a customizable function that will return a dict() of any performance
+        metric. 
+        """
         self.model.load_state_dict(weights)
         self.model.eval()
 

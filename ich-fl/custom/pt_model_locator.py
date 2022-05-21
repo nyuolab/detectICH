@@ -30,9 +30,11 @@ class PTModelLocator(ModelLocator):
     def __init__(self, exclude_vars=None, model=None):
         super(PTModelLocator, self).__init__()
 
-
+        # Define the model used for federated learning. Most users should only need to customize the following
+        # two lines of code.
         self.model = tvmodels.resnext101_32x8d(pretrained=True, progress=True)
         self.model.fc = nn.Linear(2048,6)
+        #
  
         self.exclude_vars = exclude_vars
 

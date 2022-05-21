@@ -20,14 +20,14 @@ class IntracranialDataset(Dataset):
     self.master_labels = []
     self.master_image_names = []
 
-    # Loop over each site within all_sites directory
+    # Loop over each site within directory at path defined in train or inference
     site_dirs = os.listdir(f'{self.path}')
     for site in site_dirs:
       
       # Define path for each site's data
       site_path = os.path.join(self.path, site)
 
-      if os.path.isfile(site_path):
+      if os.path.isfile(site_path): #skip anything that is a file and not directory
         continue
 
       print(f'\nAccessing data from: {site_path}')
@@ -77,7 +77,7 @@ class IntracranialDataset(Dataset):
       elif self.test == True and self.train == False:
         print(f"Number of test images: {len(site_image_names)}")
         image_paths = list(site_image_paths)
-        labels = list(self.all_labels)
+        labels = list(site_labels)
         image_names = list(site_image_names)
         self.transform = transforms.Compose([
                                             transforms.ToTensor()
