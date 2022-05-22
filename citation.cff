@@ -21,9 +21,9 @@ url: "Link to arXiv manuscript"
 license: MIT
 preferred-citation:
   authors:
-    - family-names: Cheung
-      given-names: Alexander
-    - family-names: Nasir-Moin
-      given-names: Mustafa
+    - family-names: "Cheung"
+      given-names: "Alexander"
+    - family-names: "Nasir-Moin"
+      given-names: "Mustafa"
   title: "Methods and Impact for using Federated Learning to Collaborate on Clinical Research"
   type: article
